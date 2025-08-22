@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rotaract Club of Info Institute of Engineering</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/lucide-react@0.379.0/dist/lucide-react.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Lato', 'sans-serif'],
+                        heading: ['Cinzel', 'serif'],
+                    },
+                    colors: {
+                        'primary-blue': '#005daa',
+                        'accent-blue': '#00a9e0',
+                        'dark-bg': '#111827',
+                        'dark-secondary': '#1f2937',
+                        'light-text': '#f9fafb',
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        /* Additional custom styles can go here if needed */
+        .hero-bg {
+            background-image: linear-gradient(rgba(17, 24, 39, 0.8), rgba(17, 24, 39, 0.8)), url('homeimg.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+        h1, h2 {
+            font-family: 'Cinzel', serif;
+            font-weight: 900; /* Bolder weight for Game of Thrones feel */
+        }
+
+        h3 {
+            
+            font-weight: 700; /* Slightly lighter for subheadings */
+        }
+
+        .modal {
+            display: none; /* Hidden by default */
+        }
+        .modal.show {
+            display: flex; /* Show when modal is active */
+        }
+        #gameCanvas, #flightGameCanvas, #eggDropCanvas {
+            background-color: #111827;
+            border: 2px solid #00a9e0;
+        }
+        /* Memory Game Styles */
+        .memory-card {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.5s;
+            cursor: pointer;
+        }
+        .memory-card.flip {
+            transform: rotateY(180deg);
+        }
+        .front-face, .back-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 0.5rem;
+        }
+        .front-face {
+            background-color: #002d56;
+            border: 2px solid #00a9e0;
+        }
+        .back-face {
+            background-color: #374151;
+            border: 2px solid #005daa;
+            transform: rotateY(180deg);
+        }
+        /* Whack-a-Mole Styles */
+        .hole {
+            width: 100px;
+            height: 100px;
+            background-color: #000;
+            border-radius: 50%;
+            border: 4px solid #374151;
+            position: relative;
+            overflow: hidden;
+        }
+        .goblin {
+            width: 80%;
+            height: 80%;
+            position: absolute;
+            bottom: -100%;
+            left: 10%;
+            transition: all 0.2s;
+            background-image: url('goblin.png');
+            background-size: cover;
+            border-radius: 50%;
+        }
+        .hole.up .goblin {
+            bottom: 10px;
+        }
+        /* Simon Game Styles */
+        .simon-button {
+            transition: opacity 0.2s;
+        }
+        .simon-button.active {
+            opacity: 0.5;
+        }
+        /* Custom scrollbar for gallery */
+        .gallery-scroll::-webkit-scrollbar {
+            height: 8px;
+        }
+        .gallery-scroll::-webkit-scrollbar-track {
+            background: #1f2937; /* dark-secondary */
+            border-radius: 10px;
+        }
+        .gallery-scroll::-webkit-scrollbar-thumb {
+            background: #005daa; /* primary-blue */
+            border-radius: 10px;
+        }
+        .gallery-scroll::-webkit-scrollbar-thumb:hover {
+            background: #00a9e0; /* accent-blue */
+        }
+    </style>
+</head>
+<body class="bg-dark-bg text-light-text">
+
+    <!-- Header -->
+    <header id="header" class="bg-dark-bg/80 backdrop-blur-sm shadow-lg fixed w-full top-0 z-50">
+        <nav class="container mx-auto px-6 py-3 flex justify-between items-center">
+            <a href="#" class="flex items-center space-x-2">
+                <img src="logo.png" alt="Club Logo" class="h-12 w-12 rounded-full border-2 border-accent-blue">
+                <span class="font-bold text-lg md:text-xl text-white font-heading">Rotaract Club of Info Institute of Engineering</span>
+            </a>
+            <div class="hidden md:flex space-x-6 items-center">
+                <a href="#home" class="text-gray-300 hover:text-accent-blue transition duration-300">Home</a>
+                <a href="#about" class="text-gray-300 hover:text-accent-blue transition duration-300">About Us</a>
+                <a href="#events" class="text-accent-blue font-bold hover:text-white transition duration-300">Blood Donation</a>
+                <a href="#projects" class="text-gray-300 hover:text-accent-blue transition duration-300">Projects</a>
+                <a href="#gallery" class="text-gray-300 hover:text-accent-blue transition duration-300">Power Stones</a>
+                <a href="#bulletin" class="text-gray-300 hover:text-accent-blue transition duration-300">Bulletin</a>
+                <a href="#game" class="text-gray-300 hover:text-accent-blue transition duration-300">Games</a>
+                <a href="#board" class="text-gray-300 hover:text-accent-blue transition duration-300">Board</a>
+                <a href="#contact" class="text-gray-300 hover:text-accent-blue transition duration-300">Contact</a>
+            </div>
+            <a href="#contact" class="hidden md:block bg-primary-blue text-white px-5 py-2 rounded-full hover:bg-accent-blue transition duration-300 shadow-md">Join Us</a>
+            <button id="mobile-menu-button" class="md:hidden text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+            </button>
+        </nav>
+        <!-- Mobile Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-dark-bg/90">
+            <a href="#home" class="block py-2 px-6 text-sm text-gray-300 hover:bg-primary-blue">Home</a>
+            <a href="#about" class="block py-2 px-6 text-sm text-gray-300 hover:bg-primary-blue">About Us</a>
+            <a href="#events" class="block py-2 px-6 text-sm text-accent-blue font-bold hover:bg-primary-blue hover:text-white">Blood Donation</a>
+            <a href="#projects" class="block py-2 px-6 text-sm text-gray-300 hover:bg-primary-blue">Projects</a>
+            <a href="#gallery" class="block py-2 px-6 text-sm text-gray-300 hover:bg-primary-blue">Special Recognition</a>
+            <a href="#bulletin" class="block py-2 px-6 text-sm text-gray-300 hover:bg-primary-blue">Bulletin</a>
+            <a href="#game" class="block py-2 px-6 text-sm text-gray-300 hover:bg-primary-blue">Games</a>
+            <a href="#board" class="block py-2 px-6 text-sm text-gray-300 hover:bg-primary-blue">Board</a>
+            <a href="#contact" class="block py-2 px-6 text-sm text-gray-300 hover:bg-primary-blue">Contact</a>
+            <div class="p-4">
+                 <a href="#contact" class="block text-center w-full bg-primary-blue text-white px-5 py-2 rounded-full hover:bg-accent-blue transition duration-300 shadow">Join Us</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="pt-16"> <!-- Adjust padding top to match header height -->
+
+        <!-- Hero Section -->
+        <section id="home" class="hero-bg h-[calc(100vh-64px)] flex items-center justify-center text-white text-center">
+            <div class="container mx-auto px-6">
+                <div class="py-5">
+                    <img src="white.png" alt="Club Logo" class="h-60 w-60 mx-auto">
+                </div>
+                <h1 class="text-4xl md:text-6xl font-black leading-tight mb-4 animate-fade-in-down">ACT, MAKE AN IMPACT</h1>
+                <p class="text-lg md:text-xl max-w-3xl mx-auto mb-8 animate-fade-in-up">Welcome to the Rotaract Club of Info Institute of Engineering. We are a force of young leaders, forging change and making a legendary impact.</p>
+                <a href="#about" class="bg-accent-blue text-white px-8 py-3 rounded-full text-lg font-bold hover:bg-blue-500 transition duration-300 transform hover:scale-105">Discover Our Quest</a>
+            </div>
+        </section>
+
+        <!-- About Us Section -->
+        <section id="about" class="py-20 bg-dark-secondary">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-black text-white">Royal in Soul, Wild in Sky</h2>
+                    <p class="text-gray-400 mt-2">Strength Through Unity</p>
+                    <div class="w-24 h-1 bg-primary-blue mx-auto mt-4"></div>
+                </div>
+                <div class="flex flex-col items-center gap-12">
+                    <div class="w-full lg:w-3/4">
+                        <img src="team.jpg" alt="Club Members" class="rounded-lg shadow-lg w-full">
+                    </div>
+                    <div class="w-full text-center md:text-left lg:w-3/4">
+                        <h3 class="text-2xl font-bold text-accent-blue mb-4">Who We Are</h3>
+                        <p class="text-gray-300 mb-4 leading-relaxed">
+                            The Rotaract Club of Info Institute of Engineering is a formidable clan of students and young professionals. We are part of a global network of Rotaract clubs, united under the banner of Rotary International.
+                        </p>
+                        <p class="text-gray-300 mb-6 leading-relaxed">
+                            Our quest is to empower young men and women, honing the skills needed for personal growth, to conquer the challenges facing our communities, and to forge unbreakable bonds of friendship and service across the world.
+                        </p>
+                        <a href="#" class="text-accent-blue font-semibold hover:underline">Read Our Codex &rarr;</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Events Section -->
+        <section id="events" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-black text-white">Our Initiatives</h2>
+                    <p class="text-gray-400 mt-2">Join our next epic adventure!</p>
+                    <div class="w-24 h-1 bg-primary-blue mx-auto mt-4"></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Event Card 1 -->
+                    <div class="bg-dark-secondary rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
+                        <img src="i-1.jpg" alt="Event 1" class="w-full h-48 object-cover">
+                        <div class="p-6 text-center">
+                            <h3 class="text-xl font-bold my-2 text-accent-blue">HEMODRAX</h3>
+                            <p class="text-gray-400 mb-4">We are committed to saving lives. Scan the QR code to join our WhatsApp group for urgent blood requests.</p>
+                            <img src="qr-hemo.png" alt="WhatsApp QR Code" class="w-20 h-20 object-cover mx-auto">
+                        </div>
+                    </div>
+                    <!-- Event Card 2 -->
+                    <div class="bg-dark-secondary rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
+                        <img src="i-2.jpg" alt="Event 2" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <span class="text-sm text-gray-500">1 June - 31 July</span>
+                            <h3 class="text-xl font-bold my-2 text-accent-blue">INFO KURAL</h3>
+                            <p class="text-gray-400 mb-4">A Thirukkural initiative where our members create videos, spreading its wisdom to society while building camera confidence and honoring our Tamil language.</p>
+                            <a href="https://www.instagram.com/info_kural_rac_info?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" class="font-semibold text-primary-blue hover:text-accent-blue">Follow us on &rarr;</a>
+                        </div>
+                    </div>
+                    <!-- Event Card 3 -->
+                    <div class="bg-dark-secondary rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
+                        <img src="i-3.jpg" alt="Event 3" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <span class="text-sm text-gray-500">1 June - 31 July</span>
+                            <h3 class="text-xl font-bold my-2 text-accent-blue">KURAL OVIYAM</h3>
+                            <p class="text-gray-400 mb-4">Kural Oviyam is a Tamil poetry initiative where our club members contribute 365 original poems continuously for 365 days.</p>
+                            <a href="https://www.instagram.com/kural_oviyam_rac_info?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" class="font-semibold text-primary-blue hover:text-accent-blue">Follow us on &rarr;</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Projects Section -->
+        <section id="projects" class="py-20 bg-dark-secondary">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-black text-white">Our Flagships Projects 2025 - 2026</h2>
+                    <p class="text-gray-400 mt-2">Forging a lasting legacy in our realm.</p>
+                    <div class="w-24 h-1 bg-primary-blue mx-auto mt-4"></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Project Card 1 -->
+                    <div class="bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
+                        <img src="p-2.jpg" alt="Project 1" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold my-2 text-accent-blue">DAYA 2026</h3>
+                            <p class="text-gray-400 mb-4">Daya is a legacy project of the Rotaract Club of INFO Institute of Engineering. Through this initiative, we have brought together 500+ orphaned children, engaging them in games and cultural activities. This project is not just a celebration, but a day dedicated to caring for and honoring these children. The true essence of Daya lies in its theme — Power of Mercy.</p>
+                            <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
+                        </div>
+                    </div>
+                    <!-- Project Card 2 -->
+                    <div class="bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
+                        <img src="P-1.jpg" alt="Project 2" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold my-2 text-accent-blue">STAR 2026</h3>
+                            <p class="text-gray-400 mb-4">STAR is a fellowship trip organized by the Rotaract Club of INFO Institute of Engineering. It brings Rotaractors together to socialize, travel, and share joyful experiences beyond regular meetings. The event not only creates fun and relaxation but also strengthens connections, teamwork, and lasting friendships among members</p>
+                            <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
+                        </div>
+                    </div>
+                    <!-- Project Card 3 -->
+                    <div class="bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
+                        <img src="p-3.jpg" alt="Project 3" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold my-2 text-accent-blue">ROBO 2026</h3>
+                            <p class="text-gray-400 mb-4">ROBO (Rise of Bright Opportunities) is a project of the Rotaract Club of INFO Institute of Engineering aimed at creating career opportunities for students and Rotaractors. Through this initiative, we organize a Job Fair that connects young talents with companies for placements and internships. The project helps participants explore career paths, gain professional exposure, and build a brighter future with new opportunities.</p>
+                            <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+         <!-- Upcoming Projects Section -->
+        <section id="projects" class="py-20 bg-dark-secondary">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-black text-white">Upcoming Projects 2025 - 2026</h2>
+                    <p class="text-gray-400 mt-2">Get Connected with our Projects.</p>
+                    <div class="w-24 h-1 bg-primary-blue mx-auto mt-4"></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Project Card 1 -->
+                    <div class="bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
+                        <img src="p-2.jpg" alt="Project 1" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold my-2 text-accent-blue">DAYA 2026</h3>
+                            <p class="text-gray-400 mb-4">An epic to provide enchanted scrolls and mentorship to young scribes in nearby villages.</p>
+                            <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
+                        </div>
+                    </div>
+                    <!-- Project Card 2 -->
+                    <div class="bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
+                        <img src="https://placehold.co/400x250/00a9e0/ffffff?text=The+Cleansing+Flame" alt="Project 2" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold my-2 text-accent-blue">The Cleansing Flame</h3>
+                            <p class="text-gray-400 mb-4">Regular crusades and awareness campaigns to purify the land and promote well-being.</p>
+                            <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
+                        </div>
+                    </div>
+                    <!-- Project Card 3 -->
+                    <div class="bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
+                        <img src="https://placehold.co/400x250/005daa/ffffff?text=The+Forging+Series" alt="Project 3" class="w-full h-48 object-cover">
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold my-2 text-accent-blue">The Forging Series</h3>
+                            <p class="text-gray-400 mb-4">Summoning master artisans and sages to share their wisdom and sharpen the skills of our clan.</p>
+                            <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- POWER STONES -->
+        <section id="gallery" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-black text-white">Power Stones September</h2>
+                    <p class="text-gray-400 mt-2">Monthly Special Recognition by the President for Active Participation</p>
+                    <div class="w-24 h-1 bg-primary-blue mx-auto mt-4"></div>
+                </div>
+                <div class="flex overflow-x-auto space-x-4 p-4 gallery-scroll">
+                    <div class="h-100 w-80 bg-dark-secondary p-2 rounded-lg"><img class="h-full w-full object-cover rounded-lg" src="https://placehold.co/600x400/eab308/ffffff?text=Glory" alt=""></div>
+                    <div class="flex-shrink-0 h-100 w-80 bg-dark-secondary p-2 rounded-lg"><img class="h-full w-full object-cover rounded-lg" src="https://placehold.co/600x400/22c55e/ffffff?text=Conquest" alt=""></div>
+                    <div class="flex-shrink-0 h-100 w-80 bg-dark-secondary p-2 rounded-lg"><img class="h-full w-full object-cover rounded-lg" src="https://placehold.co/600x400/8b5cf6/ffffff?text=Feast" alt=""></div>
+                    <div class="flex-shrink-0 h-100 w-80 bg-dark-secondary p-2 rounded-lg"><img class="h-full w-full object-cover rounded-lg" src="https://placehold.co/600x400/3b82f6/ffffff?text=Alliance" alt=""></div>
+                    <div class="flex-shrink-0 h-100 w-80 bg-dark-secondary p-2 rounded-lg"><img class="h-full w-full object-cover rounded-lg" src="https://placehold.co/600x400/ef4444/ffffff?text=Council" alt=""></div>
+                    <div class="flex-shrink-0 h-100 w-80 bg-dark-secondary p-2 rounded-lg"><img class="h-full w-full object-cover rounded-lg" src="https://placehold.co/600x400/14b8a6/ffffff?text=Valor" alt=""></div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Bulletin Section -->
+        <section id="bulletin" class="py-20 bg-dark-bg">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-black text-white">மாற்றத்தின் முத்திரை - THE SEAL OF CHANGE</h2>
+                    <p class="text-gray-400 mt-2">News and tales from our clan in 5 languages</p>
+                    <div class="w-24 h-1 bg-primary-blue mx-auto mt-4"></div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 bg-dark-secondary p-6 rounded-lg border border-gray-700">
+                        <img src="https://placehold.co/800x400/005daa/ffffff?text=Latest+News" alt="Latest Bulletin" class="rounded-lg mb-4 w-full">
+                        <h3 class="text-2xl font-bold text-accent-blue mb-2">August 2025 Edition</h3>
+                        <p class="text-gray-400 mb-4">This month, our clan embarked on the 'Quest for Knowledge,' delivering scrolls and supplies to young learners. Read about our journey, the challenges we faced, and the alliances we forged along the way. Our tale of service continues!</p>
+                        <a href="#" class="font-semibold text-accent-blue hover:text-white">Read the Full Scroll &rarr;</a>
+                    </div>
+                    <div class="bg-dark-secondary p-6 rounded-lg border border-gray-700">
+                        <h3 class="text-2xl font-bold text-accent-blue mb-4">Archives</h3>
+                        <ul class="space-y-3">
+                            <li><a href="#" class="text-gray-300 hover:text-accent-blue border-b border-gray-600 pb-2 block">July 2025: The Cleansing Flame</a></li>
+                            <li><a href="#" class="text-gray-300 hover:text-accent-blue border-b border-gray-600 pb-2 block">June 2025: Forging New Bonds</a></li>
+                            <li><a href="#" class="text-gray-300 hover:text-accent-blue border-b border-gray-600 pb-2 block">May 2025: A Call to Arms</a></li>
+                            <li><a href="#" class="text-gray-300 hover:text-accent-blue pb-2 block">April 2025: The First Flight</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Game Section -->
+        <section id="game" class="py-20 bg-dark-secondary">
+             <div class="container mx-auto px-6 text-center">
+                <h2 class="text-3xl md:text-4xl font-black text-white">The Dragon's Lair</h2>
+                <p class="text-gray-400 mt-2">A challenge for the worthy. Test your skill.</p>
+                <div class="w-24 h-1 bg-primary-blue mx-auto mt-4"></div>
+                <div class="mt-8 flex flex-wrap justify-center items-center gap-4">
+                    <button id="show-snake-game-modal" class="bg-accent-blue text-white px-8 py-3 rounded-full text-lg font-bold hover:bg-blue-500 transition duration-300 transform hover:scale-105">Play Gold Wyrm</button>
+                    <button id="show-memory-game-modal" class="bg-primary-blue text-white px-8 py-3 rounded-full text-lg font-bold hover:bg-blue-700 transition duration-300 transform hover:scale-105">Play Dragon's Hoard</button>
+                    <button id="show-whack-game-modal" class="bg-accent-blue text-white px-8 py-3 rounded-full text-lg font-bold hover:bg-blue-500 transition duration-300 transform hover:scale-105">Smite the Goblin</button>
+                    <button id="show-flight-game-modal" class="bg-primary-blue text-white px-8 py-3 rounded-full text-lg font-bold hover:bg-blue-700 transition duration-300 transform hover:scale-105">Play Dragon Flight</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Board Members Section -->
+        <section id="board" class="py-20">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-black text-white"> BOARD Members 2025 -26 </h2>
+                    <p class="text-gray-400 mt-2">The leaders guiding our club for the year 2025-26</p>
+                    <div class="w-24 h-1 bg-primary-blue mx-auto mt-4"></div>
+                </div>
+
+                <div id="board-members-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-10">
+                    <!-- Member Card 1 -->
+                    <div class="text-center">
+                        <img src="BM\1.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr RINESH GURU S</h3>
+                        <p class="nickname text-primary-blue text-sm italic">DRAGON</p>
+                        <p class="text-gray-400 font-medium">President</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\2.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr SIVASHANKARAN R</h3>
+                        <p class="nickname text-primary-blue text-sm italic">SPARK</p>
+                        <p class="text-gray-400 font-medium">Vice President</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\4.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr SIVASUBRAMANIAN G</h3>
+                        <p class="nickname text-primary-blue text-sm italic">LION</p>
+                        <p class="text-gray-400 font-medium">Immediate Past President</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\3.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr PP SRIRAM BHARANI M</h3>
+                        <p class="nickname text-primary-blue text-sm italic">OG</p>
+                        <p class="text-gray-400 font-medium">Club Advisor</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\5.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Mr NAGARASAN M</h3>
+                        <p class="nickname text-primary-blue text-sm italic">MASTER</p>
+                        <p class="text-gray-400 font-medium">Staff Coordinator</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\6.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr JOTHIMANI G</h3>
+                        <p class="nickname text-primary-blue text-sm italic">PEACOCK</p>
+                        <p class="text-gray-400 font-medium">Secretary Administration</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\7.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr SAMSON DURAI S</h3>
+                        <p class="nickname text-primary-blue text-sm italic">KRAKEN</p>
+                        <p class="text-gray-400 font-medium">Secretary Communication</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\8.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr PRASANNA T</h3>
+                        <p class="nickname text-primary-blue text-sm italic">DARK LORD</p>
+                        <p class="text-gray-400 font-medium">Sergeant at Arms</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\9.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr ELAVARASI MURUGAPILLAI</h3>
+                        <p class="nickname text-primary-blue text-sm italic">ASTRA</p>
+                        <p class="text-gray-400 font-medium">Treasurer</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\10.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr GOKUL VM</h3>
+                        <p class="nickname text-primary-blue text-sm italic">FALCON</p>
+                        <p class="text-gray-400 font-medium"> All Avenue Director</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\11.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr DHANUSHKOODI M</h3>
+                        <p class="nickname text-primary-blue text-sm italic">SIMBA</p>
+                        <p class="text-gray-400 font-medium">Club Service Director</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\12.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr KALEESWARAN S</h3>
+                        <p class="nickname text-primary-blue text-sm italic">HAWKEYE</p>
+                        <p class="text-gray-400 font-medium">Community Service Director</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\13.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr SRI VARSHINI V</h3>
+                        <p class="nickname text-primary-blue text-sm italic">PHOENIX</p>
+                        <p class="text-gray-400 font-medium">Professional Service Director</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\14.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr MEHA SREE K</h3>
+                        <p class="nickname text-primary-blue text-sm italic">NOAH</p>
+                        <p class="text-gray-400 font-medium">International Service Director</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\15.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr SIVAGNANA SUBHA G</h3>
+                        <p class="nickname text-primary-blue text-sm italic">FLAMINGO</p>
+                        <p class="text-gray-400 font-medium">District Priority Projects Chair</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\24.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr ROHITH S</h3>
+                        <p class="nickname text-primary-blue text-sm italic">OMEN</p>
+                        <p class="text-gray-400 font-medium">Designer</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\25.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr IBRAHIM A</h3>
+                        <p class="nickname text-primary-blue text-sm italic">CHEETAH</p>
+                        <p class="text-gray-400 font-medium">Associate Designer</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\26.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr ELAVARASAN R V</h3>
+                        <p class="nickname text-primary-blue text-sm italic">VORTEX</p>
+                        <p class="text-gray-400 font-medium">Associate Designer</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\23.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr SANTHIYA M P</h3>
+                        <p class="nickname text-primary-blue text-sm italic">GWEN</p>
+                        <p class="text-gray-400 font-medium">Director of Publication</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\21.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr ASHWINI V</h3>
+                        <p class="nickname text-primary-blue text-sm italic">LUNA</p>
+                        <p class="text-gray-400 font-medium">Director of Membership Growth</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\16.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr VENKAT RAMAN R</h3>
+                        <p class="nickname text-primary-blue text-sm italic">ZYRN</p>
+                        <p class="text-gray-400 font-medium">The Rotary Foundation Chair</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\17.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr SUSHMA R</h3>
+                        <p class="nickname text-primary-blue text-sm italic">TARGERYEN</p>
+                        <p class="text-gray-400 font-medium">Rotary Rotaract Relationship Officer</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\18.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr VIVEKA S</h3>
+                        <p class="nickname text-primary-blue text-sm italic">PIHU</p>
+                        <p class="text-gray-400 font-medium">Rotaract Learning Facilitator</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\19.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr THANGAM K</h3>
+                        <p class="nickname text-primary-blue text-sm italic">HYDRA</p>
+                        <p class="text-gray-400 font-medium">Youth Foundation Chair</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\29.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr ASWIN RAJ</h3>
+                        <p class="nickname text-primary-blue text-sm italic">BATMAN</p>
+                        <p class="text-gray-400 font-medium">Director of Digital Communication</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\27.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr MOHANA PRIYA G</h3>
+                        <p class="nickname text-primary-blue text-sm italic">EMBER</p>
+                        <p class="text-gray-400 font-medium">Creative Head & Special Initiatives</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\20.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr BHOOMISH R</h3>
+                        <p class="nickname text-primary-blue text-sm italic">OMR</p>
+                        <p class="text-gray-400 font-medium">Public Relations Chair</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\28.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr KARMEGAM M</h3>
+                        <p class="nickname text-primary-blue text-sm italic">WOLF</p>
+                        <p class="text-gray-400 font-medium">Blood Donor Cell</p>
+                    </div>
+                    <div class="text-center">
+                        <img src="BM\22.jpg" alt="President" class="w-40 h-40 mx-auto rounded-full shadow-lg mb-4 border-2 border-accent-blue">
+                        <h3 class="text-xl font-bold text-accent-blue">Rtr SARANYA DEVI S</h3>
+                        <p class="nickname text-primary-blue text-sm italic">HARLOW</p>
+                        <p class="text-gray-400 font-medium">Mental Health Chair</p>
+                    </div>
+                    <!-- ... other members ... -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="py-20">
+            <div class="container mx-auto px-6">
+                 <div class="text-center mb-12">
+                    <h2 class="text-3xl md:text-4xl font-black text-white">Send a Scroll</h2>
+                    <p class="text-gray-400 mt-2">We await your message. Join our clan or forge an alliance!</p>
+                    <div class="w-24 h-1 bg-primary-blue mx-auto mt-4"></div>
+                </div>
+                <div class="flex flex-col md:flex-row gap-10">
+                    <!-- Contact Form -->
+                    <div class="md:w-1/2 bg-dark-secondary p-8 rounded-lg shadow-lg border border-gray-700">
+                        <form>
+                            <div class="mb-4">
+                                <label for="name" class="block text-gray-300 text-sm font-bold mb-2">Full Name</label>
+                                <input type="text" id="name" name="name" class="bg-dark-bg border border-gray-600 rounded w-full py-2 px-3 text-gray-300 leading-tight focus:outline-none focus:shadow-outline focus:border-accent-blue" placeholder="X. Name">
+                            </div>
+                            <div class="mb-4">
+                                <label for="email" class="block text-gray-300 text-sm font-bold mb-2">Email Address</label>
+                                <input type="email" id="email" name="email" class="bg-dark-bg border border-gray-600 rounded w-full py-2 px-3 text-gray-300 leading-tight focus:outline-none focus:shadow-outline focus:border-accent-blue" placeholder="you@example.com">
+                            </div>
+                            <div class="mb-6">
+                                <label for="message" class="block text-gray-300 text-sm font-bold mb-2">Message</label>
+                                <textarea id="message" name="message" rows="5" class="bg-dark-bg border border-gray-600 rounded w-full py-2 px-3 text-gray-300 leading-tight focus:outline-none focus:shadow-outline focus:border-accent-blue" placeholder="Your message..."></textarea>
+                            </div>
+                            <button type="submit" class="w-full bg-primary-blue text-white font-bold py-3 px-4 rounded-full hover:bg-accent-blue focus:outline-none focus:shadow-outline transition duration-300">
+                                Send Message
+                            </button>
+                        </form>
+                    </div>
+                    <!-- Contact Info & Map -->
+                    <div class="md:w-1/2">
+                        <h3 class="text-2xl font-bold text-accent-blue mb-4">Our Stronghold</h3>
+                        <p class="text-gray-400 mb-6 leading-relaxed">
+                            <strong>Info Institute of Engineering</strong><br>
+                            Sathy Road, Kovilpalayam,<br>
+                            Coimbatore, Tamil Nadu 641107
+                        </p>
+                        <div class="space-y-3 mb-6">
+                            <p class="flex items-center text-gray-300"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3 text-accent-blue"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>+91 73975 11613 (President)</p>
+                            <p class="flex items-center text-gray-300"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3 text-accent-blue"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>racinfo3206@gmail.com</p>
+                        </div>
+                        <div class="h-64 rounded-lg overflow-hidden shadow-md border-2 border-gray-700">
+                           <iframe src="https://maps.google.com/maps?q=11.128231349948935,77.03898596732493&hl=en&z=15&output=embed" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" class="grayscale"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark-secondary text-white py-10 border-t border-gray-800">
+        <div class="container mx-auto px-6 text-center">
+            <p>&copy; Developed by RINESH GURU S & SIVASHANKARAN R<br>&copy; 2025 Rotaract Club of Info Institute of Engineering. All Rights Reserved.</p>
+            <div class="flex justify-center space-x-6 mt-4">
+                <a href="#" class="hover:text-accent-blue transition duration-300">Facebook</a>
+                <a href="#" class="hover:text-accent-blue transition duration-300">Instagram</a>
+                <a href="#" class="hover:text-accent-blue transition duration-300">LinkedIn</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Snake Game Modal -->
+    <div id="snake-game-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center z-50">
+        <div class="bg-dark-secondary p-4 sm:p-8 rounded-lg shadow-lg border-2 border-primary-blue w-full max-w-lg mx-4 text-center">
+            <h3 class="text-2xl font-bold text-accent-blue mb-4">Gold Wyrm</h3>
+            <canvas id="gameCanvas" width="400" height="400" class="mx-auto rounded-md"></canvas>
+            <div class="mt-4 flex justify-around items-center">
+                <p class="text-lg">Score: <span id="score" class="font-bold text-accent-blue">0</span></p>
+                <button id="restart-snake-game" class="bg-primary-blue text-white px-4 py-2 rounded-full">Restart</button>
+            </div>
+             <div class="mt-4 grid grid-cols-3 gap-2 justify-center items-center max-w-xs mx-auto md:hidden">
+                <div></div>
+                <button id="up-btn" class="bg-primary-blue text-white p-3 rounded-lg">▲</button>
+                <div></div>
+                <button id="left-btn" class="bg-primary-blue text-white p-3 rounded-lg">◀</button>
+                <button id="down-btn" class="bg-primary-blue text-white p-3 rounded-lg">▼</button>
+                <button id="right-btn" class="bg-primary-blue text-white p-3 rounded-lg">▶</button>
+            </div>
+            <button id="close-snake-game-modal" class="mt-6 bg-gray-600 text-white px-6 py-2 rounded-full hover:bg-gray-500 transition">Close</button>
+        </div>
+    </div>
+
+    <!-- Memory Game Modal -->
+    <div id="memory-game-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center z-50">
+        <div class="bg-dark-secondary p-4 sm:p-8 rounded-lg shadow-lg border-2 border-primary-blue w-full max-w-2xl mx-4 text-center">
+            <h3 class="text-2xl font-bold text-accent-blue mb-4">Dragon's Hoard</h3>
+            <div id="memory-game-board" class="grid grid-cols-4 gap-4 justify-center">
+                <!-- Cards will be generated here -->
+            </div>
+            <div class="mt-4 flex justify-around items-center">
+                <p class="text-lg">Moves: <span id="moves-count" class="font-bold text-accent-blue">0</span></p>
+                <button id="reset-memory-game" class="bg-primary-blue text-white px-4 py-2 rounded-full">Reset</button>
+            </div>
+            <button id="close-memory-game-modal" class="mt-6 bg-gray-600 text-white px-6 py-2 rounded-full hover:bg-gray-500 transition">Close</button>
+        </div>
+    </div>
+    
+    <!-- Whack-a-Mole Game Modal -->
+    <div id="whack-game-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center z-50">
+        <div class="bg-dark-secondary p-4 sm:p-8 rounded-lg shadow-lg border-2 border-primary-blue w-full max-w-2xl mx-4 text-center">
+            <h3 class="text-2xl font-bold text-accent-blue mb-4">Smite the Goblin</h3>
+            <div id="whack-game-board" class="grid grid-cols-3 gap-4 justify-center">
+                 <!-- Holes will be generated here -->
+            </div>
+            <div class="mt-4 flex justify-around items-center">
+                <p class="text-lg">Score: <span id="whack-score" class="font-bold text-accent-blue">0</span></p>
+                <p class="text-lg">Time Left: <span id="time-left" class="font-bold text-accent-blue">30</span></p>
+            </div>
+            <button id="close-whack-game-modal" class="mt-6 bg-gray-600 text-white px-6 py-2 rounded-full hover:bg-gray-500 transition">Close</button>
+        </div>
+    </div>
+    
+    <!-- Flight Game Modal -->
+    <div id="flight-game-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center z-50">
+        <div class="bg-dark-secondary p-4 sm:p-8 rounded-lg shadow-lg border-2 border-primary-blue w-full max-w-lg mx-4 text-center">
+            <h3 class="text-2xl font-bold text-accent-blue mb-4">Dragon Flight</h3>
+            <canvas id="flightGameCanvas" width="400" height="400" class="mx-auto rounded-md"></canvas>
+            <div class="mt-4">
+                <p class="text-lg">Time Survived: <span id="flight-time" class="font-bold text-accent-blue">0</span>s</p>
+            </div>
+            <button id="close-flight-game-modal" class="mt-6 bg-gray-600 text-white px-6 py-2 rounded-full hover:bg-gray-500 transition">Close</button>
+        </div>
+    </div>
+
+    <!-- Congratulations Modal -->
+    <div id="congrats-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center z-50">
+        <div class="bg-dark-secondary p-8 rounded-lg shadow-lg border-2 border-accent-blue w-full max-w-md mx-4 text-center">
+            <h3 class="text-3xl font-bold text-accent-blue mb-4">Victory!</h3>
+            <p class="text-gray-300 mb-6">You have proven your worth in the Dragon's Lair. Your name will be sung in the halls of legend!</p>
+            <button id="close-congrats-modal" class="bg-primary-blue text-white px-6 py-2 rounded-full hover:bg-accent-blue transition">Continue</button>
+        </div>
+    </div>
+
+    <!-- Game Over Modal -->
+    <div id="game-over-modal" class="modal fixed inset-0 bg-black bg-opacity-75 items-center justify-center z-50">
+        <div class="bg-dark-secondary p-8 rounded-lg shadow-lg border-2 border-accent-blue w-full max-w-md mx-4 text-center">
+            <h3 id="game-over-title" class="text-3xl font-bold text-accent-blue mb-4">Game Over</h3>
+            <p id="game-over-message" class="text-gray-300 mb-6"></p>
+            <div class="flex gap-4 justify-center">
+                <button id="close-game-over-modal" class="bg-gray-600 text-white px-6 py-2 rounded-full hover:bg-gray-500 transition">Close</button>
+                <button id="restart-game-button" class="bg-primary-blue text-white px-6 py-2 rounded-full hover:bg-accent-blue transition">Restart</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- General UI Logic ---
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        const mobileMenuLinks = mobileMenu.getElementsByTagName('a');
+        for (let link of mobileMenuLinks) {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+            });
+        }
+        
+        const congratsModal = document.getElementById('congrats-modal');
+        const closeCongratsModalBtn = document.getElementById('close-congrats-modal');
+        closeCongratsModalBtn.addEventListener('click', () => congratsModal.classList.remove('show'));
+
+        function showCongrats() {
+            congratsModal.classList.add('show');
+        }
+
+        const gameOverModal = document.getElementById('game-over-modal');
+        const closeGameOverModalBtn = document.getElementById('close-game-over-modal');
+        const restartGameBtn = document.getElementById('restart-game-button');
+        let lastGamePlayed = '';
+
+        function showGameOver(gameType, finalScore) {
+            lastGamePlayed = gameType;
+            const title = document.getElementById('game-over-title');
+            const message = document.getElementById('game-over-message');
+
+            if (gameType === 'snake') {
+                title.textContent = 'The Wyrm Has Fallen!';
+                message.textContent = `Your final score was ${finalScore}.`;
+            } else if (gameType === 'flight') {
+                title.textContent = 'Flight Ended!';
+                message.textContent = `You survived for ${finalScore} seconds.`;
+            }
+            gameOverModal.classList.add('show');
+        }
+
+        closeGameOverModalBtn.addEventListener('click', () => gameOverModal.classList.remove('show'));
+        restartGameBtn.addEventListener('click', () => {
+            gameOverModal.classList.remove('show');
+            if(lastGamePlayed === 'snake') startSnakeGame();
+            if(lastGamePlayed === 'flight') startFlightGame();
+        });
+
+
+        // --- Snake Game Logic ---
+        const snakeGameModal = document.getElementById('snake-game-modal');
+        const showSnakeGameModalBtn = document.getElementById('show-snake-game-modal');
+        const closeSnakeGameModalBtn = document.getElementById('close-snake-game-modal');
+        const restartSnakeGameBtn = document.getElementById('restart-snake-game');
+        
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+
+        const upBtn = document.getElementById('up-btn');
+        const downBtn = document.getElementById('down-btn');
+        const leftBtn = document.getElementById('left-btn');
+        const rightBtn = document.getElementById('right-btn');
+
+        const gridSize = 20;
+        let snake = [{ x: 10, y: 10 }];
+        let food = {};
+        let snakeDirection = 'right';
+        let snakeScore = 0;
+        let snakeGameLoop;
+        let changingDirection = false;
+
+        function startSnakeGame() {
+            snake = [{ x: 10, y: 10 }];
+            snakeDirection = 'right';
+            snakeScore = 0;
+            scoreEl.textContent = snakeScore;
+            generateFood();
+            if(snakeGameLoop) clearInterval(snakeGameLoop);
+            snakeGameLoop = setInterval(mainSnake, 100);
+        }
+
+        function mainSnake() {
+            changingDirection = false;
+            updateSnake();
+            drawSnake();
+        }
+
+        function updateSnake() {
+            const head = { x: snake[0].x, y: snake[0].y };
+
+            switch (snakeDirection) {
+                case 'up': head.y--; break;
+                case 'down': head.y++; break;
+                case 'left': head.x--; break;
+                case 'right': head.x++; break;
+            }
+
+            if (head.x < 0 || head.x >= canvas.width / gridSize || head.y < 0 || head.y >= canvas.height / gridSize || checkCollision(head)) {
+                clearInterval(snakeGameLoop);
+                showGameOver('snake', snakeScore);
+                return;
+            }
+
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                snakeScore++;
+                scoreEl.textContent = snakeScore;
+                if(snakeScore >= 10) {
+                    clearInterval(snakeGameLoop);
+                    showCongrats();
+                }
+                generateFood();
+            } else {
+                snake.pop();
+            }
+        }
+
+        function drawSnake() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw snake body
+            for (let i = 1; i < snake.length; i++) {
+                ctx.fillStyle = '#00a9e0'; // accent-blue
+                ctx.fillRect(snake[i].x * gridSize, snake[i].y * gridSize, gridSize, gridSize);
+                ctx.strokeStyle = '#005daa'; // primary-blue
+                ctx.strokeRect(snake[i].x * gridSize, snake[i].y * gridSize, gridSize, gridSize);
+            }
+
+            // Draw snake head
+            const head = snake[0];
+            const headX = head.x * gridSize;
+            const headY = head.y * gridSize;
+            ctx.fillStyle = '#00caff'; // Lighter blue for head
+
+            switch (snakeDirection) {
+                case 'up':
+                    ctx.fillRect(headX, headY, gridSize, gridSize);
+                    ctx.fillRect(headX + 5, headY - 5, 10, 5); // Snout
+                    ctx.fillStyle = '#111827'; // Eye color
+                    ctx.fillRect(headX + 3, headY + 5, 4, 4);
+                    ctx.fillRect(headX + 13, headY + 5, 4, 4);
+                    break;
+                case 'down':
+                    ctx.fillRect(headX, headY, gridSize, gridSize);
+                    ctx.fillRect(headX + 5, headY + 20, 10, 5); // Snout
+                    ctx.fillStyle = '#111827';
+                    ctx.fillRect(headX + 3, headY + 11, 4, 4);
+                    ctx.fillRect(headX + 13, headY + 11, 4, 4);
+                    break;
+                case 'left':
+                    ctx.fillRect(headX, headY, gridSize, gridSize);
+                    ctx.fillRect(headX - 5, headY + 5, 5, 10); // Snout
+                    ctx.fillStyle = '#111827';
+                    ctx.fillRect(headX + 5, headY + 3, 4, 4);
+                    ctx.fillRect(headX + 5, headY + 13, 4, 4);
+                    break;
+                case 'right':
+                    ctx.fillRect(headX, headY, gridSize, gridSize);
+                    ctx.fillRect(headX + 20, headY + 5, 5, 10); // Snout
+                    ctx.fillStyle = '#111827';
+                    ctx.fillRect(headX + 11, headY + 3, 4, 4);
+                    ctx.fillRect(headX + 11, headY + 13, 4, 4);
+                    break;
+            }
+
+            // Draw food
+            ctx.fillStyle = '#005daa'; // primary-blue
+            ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize, gridSize);
+        }
+
+        function generateFood() {
+            food.x = Math.floor(Math.random() * (canvas.width / gridSize));
+            food.y = Math.floor(Math.random() * (canvas.height / gridSize));
+            snake.forEach(part => {
+                if (part.x === food.x && part.y === food.y) {
+                    generateFood();
+                }
+            });
+        }
+
+        function checkCollision(head) {
+            for (let i = 1; i < snake.length; i++) {
+                if (head.x === snake[i].x && head.y === snake[i].y) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function changeSnakeDirection(event) {
+            if (changingDirection) return;
+            changingDirection = true;
+
+            const keyPressed = event.key;
+            const goingUp = snakeDirection === 'up';
+            const goingDown = snakeDirection === 'down';
+            const goingLeft = snakeDirection === 'left';
+            const goingRight = snakeDirection === 'right';
+
+            if (keyPressed === 'ArrowUp' && !goingDown) snakeDirection = 'up';
+            if (keyPressed === 'ArrowDown' && !goingUp) snakeDirection = 'down';
+            if (keyPressed === 'ArrowLeft' && !goingRight) snakeDirection = 'left';
+            if (keyPressed === 'ArrowRight' && !goingLeft) snakeDirection = 'right';
+        }
+        
+        upBtn.addEventListener('click', () => { if (snakeDirection !== 'down') snakeDirection = 'up' });
+        downBtn.addEventListener('click', () => { if (snakeDirection !== 'up') snakeDirection = 'down' });
+        leftBtn.addEventListener('click', () => { if (snakeDirection !== 'right') snakeDirection = 'left' });
+        rightBtn.addEventListener('click', () => { if (snakeDirection !== 'left') snakeDirection = 'right' });
+
+        document.addEventListener('keydown', changeSnakeDirection);
+
+        showSnakeGameModalBtn.addEventListener('click', () => {
+            snakeGameModal.classList.add('show');
+            startSnakeGame();
+        });
+        closeSnakeGameModalBtn.addEventListener('click', () => {
+            snakeGameModal.classList.remove('show');
+            clearInterval(snakeGameLoop);
+        });
+        restartSnakeGameBtn.addEventListener('click', startSnakeGame);
+        
+        // --- Memory Game Logic ---
+        const memoryGameModal = document.getElementById('memory-game-modal');
+        const showMemoryGameModalBtn = document.getElementById('show-memory-game-modal');
+        const closeMemoryGameModalBtn = document.getElementById('close-memory-game-modal');
+        const memoryGameBoard = document.getElementById('memory-game-board');
+        const movesCountEl = document.getElementById('moves-count');
+        const resetMemoryGameBtn = document.getElementById('reset-memory-game');
+
+        const cardIcons = [
+            { name: 'dragon', svg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f9fafb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 16.5a2.5 2.5 0 1 1-5 0"/><path d="M8.5 16.5a2.5 2.5 0 1 0 5 0"/><path d="M12 21a9 9 0 0 0 9-9c0-4.97-4.03-9-9-9s-9 4.03-9 9a9 9 0 0 0 9 9z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path d="M12 2v2"/><path d="M12 19v2"/></svg>' },
+            { name: 'fire', svg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f9fafb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2z"/><path d="M12 2a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h2z"/><path d="M12 7h.01"/><path d="M12 12h.01"/><path d="M12 17h.01"/></svg>' },
+            { name: 'rotary', svg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f9fafb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2v4"/><path d="M12 18v4"/><path d="m4.93 4.93 2.83 2.83"/><path d="m16.24 16.24 2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="m4.93 19.07 2.83-2.83"/><path d="m16.24 7.76 2.83-2.83"/></svg>' },
+            { name: 'service', svg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f9fafb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>' },
+            { name: 'gold', svg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f9fafb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m4.93 19.07 1.41-1.41"/><path d="m17.66 6.34 1.41-1.41"/></svg>' },
+            { name: 'globe', svg: '<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f9fafb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>' }
+        ];
+
+        let gameGrid = [...cardIcons, ...cardIcons];
+        let firstCard, secondCard;
+        let hasFlippedCard = false;
+        let lockBoard = false;
+        let moves = 0;
+        let matchedPairs = 0;
+
+        function shuffle(array) {
+            array.sort(() => Math.random() - 0.5);
+        }
+
+        function startMemoryGame() {
+            moves = 0;
+            matchedPairs = 0;
+            movesCountEl.textContent = moves;
+            memoryGameBoard.innerHTML = '';
+            shuffle(gameGrid);
+            
+            gameGrid.forEach(item => {
+                const card = document.createElement('div');
+                card.classList.add('memory-card');
+                card.dataset.name = item.name;
+                card.innerHTML = `
+                    <div class="front-face">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#f9fafb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 16.5a2.5 2.5 0 1 1-5 0"/><path d="M8.5 16.5a2.5 2.5 0 1 0 5 0"/><path d="M12 21a9 9 0 0 0 9-9c0-4.97-4.03-9-9-9s-9 4.03-9 9a9 9 0 0 0 9 9z"/><path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path d="M12 2v2"/><path d="M12 19v2"/></svg>
+                    </div>
+                    <div class="back-face">${item.svg}</div>
+                `;
+                memoryGameBoard.appendChild(card);
+                card.addEventListener('click', flipCard);
+            });
+        }
+
+        function flipCard() {
+            if (lockBoard) return;
+            if (this === firstCard) return;
+
+            this.classList.add('flip');
+
+            if (!hasFlippedCard) {
+                hasFlippedCard = true;
+                firstCard = this;
+                return;
+            }
+
+            secondCard = this;
+            moves++;
+            movesCountEl.textContent = moves;
+            checkForMatch();
+        }
+
+        function checkForMatch() {
+            let isMatch = firstCard.dataset.name === secondCard.dataset.name;
+            isMatch ? disableCards() : unflipCards();
+        }
+
+        function disableCards() {
+            firstCard.removeEventListener('click', flipCard);
+            secondCard.removeEventListener('click', flipCard);
+            matchedPairs++;
+            if (matchedPairs === cardIcons.length) {
+                setTimeout(showCongrats, 500);
+            }
+            resetBoard();
+        }
+
+        function unflipCards() {
+            lockBoard = true;
+            setTimeout(() => {
+                firstCard.classList.remove('flip');
+                secondCard.classList.remove('flip');
+                resetBoard();
+            }, 1000);
+        }
+
+        function resetBoard() {
+            [hasFlippedCard, lockBoard] = [false, false];
+            [firstCard, secondCard] = [null, null];
+        }
+
+        showMemoryGameModalBtn.addEventListener('click', () => {
+            memoryGameModal.classList.add('show');
+            startMemoryGame();
+        });
+        closeMemoryGameModalBtn.addEventListener('click', () => {
+            memoryGameModal.classList.remove('show');
+        });
+        resetMemoryGameBtn.addEventListener('click', startMemoryGame);
+
+        // --- Whack-a-Mole Game Logic ---
+        const whackGameModal = document.getElementById('whack-game-modal');
+        const showWhackGameModalBtn = document.getElementById('show-whack-game-modal');
+        const closeWhackGameModalBtn = document.getElementById('close-whack-game-modal');
+        const whackGameBoard = document.getElementById('whack-game-board');
+        const whackScoreEl = document.getElementById('whack-score');
+        const timeLeftEl = document.getElementById('time-left');
+        
+        let whackScore = 0;
+        let timeLeft = 30;
+        let whackGameInterval;
+        let timerInterval;
+
+        function startWhackGame() {
+            whackScore = 0;
+            timeLeft = 30;
+            whackScoreEl.textContent = whackScore;
+            timeLeftEl.textContent = timeLeft;
+            whackGameBoard.innerHTML = '';
+
+            for(let i = 0; i < 9; i++) {
+                let hole = document.createElement('div');
+                hole.classList.add('hole');
+                let goblin = document.createElement('div');
+                goblin.classList.add('goblin');
+                goblin.addEventListener('click', bonkGoblin);
+                hole.appendChild(goblin);
+                whackGameBoard.appendChild(hole);
+            }
+
+            whackGameInterval = setInterval(peep, 800);
+            timerInterval = setInterval(countdown, 1000);
+        }
+
+        function peep() {
+            const holes = document.querySelectorAll('.hole');
+            const randomHole = holes[Math.floor(Math.random() * holes.length)];
+            randomHole.classList.add('up');
+            setTimeout(() => {
+                randomHole.classList.remove('up');
+            }, 700);
+        }
+
+        function bonkGoblin(e) {
+            if(!e.isTrusted) return; // Prevent fake clicks
+            whackScore++;
+            whackScoreEl.textContent = whackScore;
+            this.parentNode.classList.remove('up');
+        }
+
+        function countdown() {
+            timeLeft--;
+            timeLeftEl.textContent = timeLeft;
+            if (timeLeft === 0) {
+                clearInterval(whackGameInterval);
+                clearInterval(timerInterval);
+                if (whackScore >= 15) {
+                    showCongrats();
+                } else {
+                    alert(`Time's up! Your score: ${whackScore}`);
+                }
+            }
+        }
+
+        showWhackGameModalBtn.addEventListener('click', () => {
+            whackGameModal.classList.add('show');
+            startWhackGame();
+        });
+
+        closeWhackGameModalBtn.addEventListener('click', () => {
+            whackGameModal.classList.remove('show');
+            clearInterval(whackGameInterval);
+            clearInterval(timerInterval);
+        });
+        
+        // --- Flight Game Logic ---
+        const flightGameModal = document.getElementById('flight-game-modal');
+        const showFlightGameModalBtn = document.getElementById('show-flight-game-modal');
+        const closeFlightGameModalBtn = document.getElementById('close-flight-game-modal');
+        const flightCanvas = document.getElementById('flightGameCanvas');
+        const flightCtx = flightCanvas.getContext('2d');
+        const flightTimeEl = document.getElementById('flight-time');
+
+        let player, obstacles, flightGameLoop, flightTime;
+        
+        const dragonIcon = new Image();
+        dragonIcon.src = `data:image/svg+xml;base64,${btoa('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="30" viewBox="0 0 24 24" fill="#00a9e0" stroke="#f9fafb" stroke-width="1"><path d="M10 12c-4 0-5 2-5 2s1 2 5 2h12l-4-4 4-4H5s-1 2-5 2h5z"/><path d="M22 12c-4 0-5-2-5-2s1-2 5-2h-5l4 4-4 4h12z"/></svg>')}`;
+
+
+        function startFlightGame() {
+            player = { x: 50, y: flightCanvas.height / 2, width: 40, height: 30 };
+            obstacles = [];
+            flightTime = 0;
+            if(flightGameLoop) cancelAnimationFrame(flightGameLoop);
+            flightGameLoop = requestAnimationFrame(mainFlightGame);
+            setInterval(() => { flightTime++ }, 1000);
+        }
+
+        function mainFlightGame() {
+            updateFlightGame();
+            drawFlightGame();
+            flightGameLoop = requestAnimationFrame(mainFlightGame);
+        }
+
+        function updateFlightGame() {
+            // Move obstacles
+            for (let i = 0; i < obstacles.length; i++) {
+                obstacles[i].x -= 2;
+                if (obstacles[i].x + obstacles[i].width < 0) {
+                    obstacles.splice(i, 1);
+                }
+            }
+
+            // Add new obstacles
+            if (Math.random() < 0.02) {
+                let height = Math.random() * 100 + 50;
+                let y = Math.random() < 0.5 ? 0 : flightCanvas.height - height;
+                obstacles.push({ x: flightCanvas.width, y: y, width: 30, height: height });
+            }
+
+            // Check for collisions
+            for (let obs of obstacles) {
+                if (player.x < obs.x + obs.width &&
+                    player.x + player.width > obs.x &&
+                    player.y < obs.y + obs.height &&
+                    player.y + player.height > obs.y) {
+                    cancelAnimationFrame(flightGameLoop);
+                    showGameOver('flight', flightTime);
+                    return;
+                }
+            }
+            
+            flightTimeEl.textContent = flightTime;
+        }
+
+        function drawFlightGame() {
+            flightCtx.clearRect(0, 0, flightCanvas.width, flightCanvas.height);
+            
+            // Draw player (dragon rider)
+            flightCtx.drawImage(dragonIcon, player.x, player.y, player.width, player.height);
+
+            // Draw obstacles (storm clouds)
+            flightCtx.fillStyle = '#f9fafb'; // light-text
+            obstacles.forEach(obs => {
+                flightCtx.fillRect(obs.x, obs.y, obs.width, obs.height);
+            });
+        }
+        
+        function movePlayer(e) {
+             if (e.key === 'ArrowUp') player.y -= 10;
+             if (e.key === 'ArrowDown') player.y += 10;
+        }
+        
+        document.addEventListener('keydown', movePlayer);
+
+        showFlightGameModalBtn.addEventListener('click', () => {
+            flightGameModal.classList.add('show');
+            startFlightGame();
+        });
+        closeFlightGameModalBtn.addEventListener('click', () => {
+            flightGameModal.classList.remove('show');
+            cancelAnimationFrame(flightGameLoop);
+        });
+
+    </script>
+
+</body>
+</html>
