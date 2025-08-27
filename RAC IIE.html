@@ -132,6 +132,25 @@
         .gallery-scroll::-webkit-scrollbar-thumb:hover {
             background: #00a9e0; /* accent-blue */
         }
+
+        /* Expandable content styling */
+        #codex-content {
+            transition: all 0.3s ease-in-out;
+            opacity: 1;
+            max-height: none;
+        }
+        #codex-content.hidden {
+            display: none !important;
+        }
+        #codex-content:not(.hidden) {
+            display: block !important;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body class="bg-dark-bg text-light-text">
@@ -377,7 +396,7 @@
         <section id="bulletin" class="py-20 bg-dark-bg">
             <div class="container mx-auto px-6">
                 <div class="text-center mb-12">
-                    <h2 class="text-3xl md:text-4xl font-black text-white">மாற்றத்தின் முத்திரை - THE SEAL OF CHANGE</h2>
+                    <h2 class="text-3xl md:text-4xl font-black text-white">மாற்��த்தின் முத்திரை - THE SEAL OF CHANGE</h2>
                     <p class="text-gray-400 mt-2">News and tales from our clan in 5 languages</p>
                     <div class="w-24 h-1 bg-primary-blue mx-auto mt-4"></div>
                 </div>
