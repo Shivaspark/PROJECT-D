@@ -765,6 +765,32 @@
             });
         }
 
+        // --- About Us Expand/Collapse Logic ---
+        const aboutExpandBtn = document.getElementById('about-expand-btn');
+        const aboutExpandableContent = document.getElementById('expandable-about');
+        const aboutBtnText = document.getElementById('about-btn-text');
+        const aboutArrow = document.getElementById('about-arrow');
+
+        let isAboutExpanded = false;
+
+        aboutExpandBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            if (isAboutExpanded) {
+                // Collapse
+                aboutExpandableContent.classList.add('hidden');
+                aboutBtnText.textContent = 'Read Our Codex';
+                aboutArrow.style.transform = 'rotate(0deg)';
+                isAboutExpanded = false;
+            } else {
+                // Expand
+                aboutExpandableContent.classList.remove('hidden');
+                aboutBtnText.textContent = 'Hide Details';
+                aboutArrow.style.transform = 'rotate(180deg)';
+                isAboutExpanded = true;
+            }
+        });
+
         // --- Active Navigation Logic ---
         function updateActiveNavigation() {
             const sections = ['home', 'about', 'events', 'projects', 'gallery', 'bulletin', 'game', 'board', 'contact'];
