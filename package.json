@@ -1,0 +1,19 @@
+{
+  "name": "rotaract-club-website",
+  "version": "1.0.0",
+  "description": "Rotaract Club of Info Institute of Engineering Website",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "keywords": [
+    "rotaract",
+    "website",
+    "static"
+  ],
+  "author": "RINESH GURU S & SIVASHANKARAN R"
+}
