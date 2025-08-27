@@ -814,10 +814,51 @@
             });
         }
 
-        // Add scroll listener
-        window.addEventListener('scroll', updateActiveNavigation);
+        // Add navigation click handling
+        function handleNavClick(event) {
+            const link = event.target;
+            const href = link.getAttribute('href');
+
+            if (href && href.startsWith('#')) {
+                const targetSection = href.substring(1);
+                const targetElement = document.getElementById(targetSection);
+
+                if (targetElement) {
+                    // Smooth scroll to target
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+
+                    // Close mobile menu if open
+                    mobileMenu.classList.add('hidden');
+
+                    // Update active state after a brief delay to account for smooth scroll
+                    setTimeout(updateActiveNavigation, 100);
+                }
+            }
+        }
+
+        // Add click listeners to all navigation links
+        document.querySelectorAll('nav a[href^="#"], #mobile-menu a[href^="#"]').forEach(link => {
+            link.addEventListener('click', handleNavClick);
+        });
+
+        // Add scroll listener with throttling for better performance
+        let scrollTimeout;
+        window.addEventListener('scroll', () => {
+            if (scrollTimeout) {
+                clearTimeout(scrollTimeout);
+            }
+            scrollTimeout = setTimeout(updateActiveNavigation, 10);
+        });
+
         // Run on page load
-        document.addEventListener('DOMContentLoaded', updateActiveNavigation);
+        document.addEventListener('DOMContentLoaded', () => {
+            updateActiveNavigation();
+            // Set initial active state to home
+            setTimeout(updateActiveNavigation, 500);
+        });
 
         const congratsModal = document.getElementById('congrats-modal');
         const closeCongratsModalBtn = document.getElementById('close-congrats-modal');
