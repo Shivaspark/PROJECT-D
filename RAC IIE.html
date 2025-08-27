@@ -901,40 +901,53 @@
             updateActiveNavigation();
             // Set initial active state to home
             setTimeout(updateActiveNavigation, 500);
+            // Initialize codex toggle functionality
+            initializeCodexToggle();
         });
 
-        // --- Read Our Codex Expand/Collapse Logic ---
-        const codexToggle = document.getElementById('codex-toggle');
-        const codexContent = document.getElementById('codex-content');
-        const codexText = document.getElementById('codex-text');
-        const codexArrow = document.getElementById('codex-arrow');
-        let isCodexExpanded = false;
+        // --- Know About Us Expand/Collapse Logic ---
+        function initializeCodexToggle() {
+            const codexToggle = document.getElementById('codex-toggle');
+            const codexContent = document.getElementById('codex-content');
+            const codexText = document.getElementById('codex-text');
+            const codexArrow = document.getElementById('codex-arrow');
 
-        codexToggle.addEventListener('click', (event) => {
-            event.preventDefault();
-
-            if (isCodexExpanded) {
-                // Collapse
-                codexContent.classList.add('hidden');
-                codexText.textContent = 'Know About Us';
-                codexArrow.innerHTML = '&rarr;';
-                isCodexExpanded = false;
-            } else {
-                // Expand
-                codexContent.classList.remove('hidden');
-                codexText.textContent = 'Show Less';
-                codexArrow.innerHTML = '&uarr;';
-                isCodexExpanded = true;
-
-                // Smooth scroll to make sure expanded content is visible
-                setTimeout(() => {
-                    codexContent.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'nearest'
-                    });
-                }, 100);
+            if (!codexToggle || !codexContent || !codexText || !codexArrow) {
+                console.error('Codex elements not found');
+                return;
             }
-        });
+
+            let isCodexExpanded = false;
+
+            codexToggle.addEventListener('click', (event) => {
+                event.preventDefault();
+                console.log('Codex toggle clicked, current state:', isCodexExpanded);
+
+                if (isCodexExpanded) {
+                    // Collapse
+                    codexContent.classList.add('hidden');
+                    codexText.textContent = 'Know About Us';
+                    codexArrow.innerHTML = '&rarr;';
+                    isCodexExpanded = false;
+                    console.log('Collapsed');
+                } else {
+                    // Expand
+                    codexContent.classList.remove('hidden');
+                    codexText.textContent = 'Show Less';
+                    codexArrow.innerHTML = '&uarr;';
+                    isCodexExpanded = true;
+                    console.log('Expanded');
+
+                    // Smooth scroll to make sure expanded content is visible
+                    setTimeout(() => {
+                        codexContent.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'nearest'
+                        });
+                    }, 100);
+                }
+            });
+        }
 
         const congratsModal = document.getElementById('congrats-modal');
         const closeCongratsModalBtn = document.getElementById('close-congrats-modal');
