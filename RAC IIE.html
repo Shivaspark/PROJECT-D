@@ -212,6 +212,7 @@
                         </p>
 
                         <!-- Expandable Content -->
+<<<<<<< HEAD
                         <div id="codex-content" class="hidden mb-6">
                             <div class="bg-dark-bg p-6 rounded-lg border-l-4 border-accent-blue">
                                 <h4 class="text-xl font-bold text-accent-blue mb-4">The Rotaract Codex</h4>
@@ -225,7 +226,20 @@
                         </div>
 
                         <button id="codex-toggle" class="text-accent-blue font-semibold hover:underline focus:outline-none transition-all duration-300">
-                            <span id="codex-text">Read Our Codex</span> <span id="codex-arrow">&rarr;</span>
+                            <span id="codex-text">Know About Us</span> <span id="codex-arrow">&rarr;</span>
+=======
+                        <div id="expandable-about" class="hidden mb-6">
+                            <p class="text-gray-300 mb-4 leading-relaxed bg-dark-bg p-6 rounded-lg border-l-4 border-accent-blue">
+                                Founded with the vision of creating future leaders, our club operates under the Four-Way Test principles: Is it the truth? Is it fair to all concerned? Will it build goodwill and better friendships? Will it be beneficial to all concerned? Through various avenues of service - Club Service, Community Service, Professional Development, and International Service - we strive to make a meaningful impact in our local community and beyond. Our members gain invaluable leadership experience, develop professional networks, and participate in life-changing service projects that address real-world challenges. We believe in the power of youth to drive positive change and create a more sustainable, peaceful world for all.
+                            </p>
+                        </div>
+
+                        <button id="about-expand-btn" class="text-accent-blue font-semibold hover:underline transition-all duration-300 transform hover:scale-105 flex items-center gap-2">
+                            <span id="about-btn-text"> Know About Us</span>
+                            <svg id="about-arrow" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+>>>>>>> refs/remotes/origin/main
                         </button>
                     </div>
                 </div>
@@ -767,6 +781,32 @@
                 mobileMenu.classList.add('hidden');
             });
         }
+
+        // --- About Us Expand/Collapse Logic ---
+        const aboutExpandBtn = document.getElementById('about-expand-btn');
+        const aboutExpandableContent = document.getElementById('expandable-about');
+        const aboutBtnText = document.getElementById('about-btn-text');
+        const aboutArrow = document.getElementById('about-arrow');
+
+        let isAboutExpanded = false;
+
+        aboutExpandBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            if (isAboutExpanded) {
+                // Collapse
+                aboutExpandableContent.classList.add('hidden');
+                aboutBtnText.textContent = 'Read Our Codex';
+                aboutArrow.style.transform = 'rotate(0deg)';
+                isAboutExpanded = false;
+            } else {
+                // Expand
+                aboutExpandableContent.classList.remove('hidden');
+                aboutBtnText.textContent = 'Hide Details';
+                aboutArrow.style.transform = 'rotate(180deg)';
+                isAboutExpanded = true;
+            }
+        });
 
         // --- Active Navigation Logic ---
         function updateActiveNavigation() {
