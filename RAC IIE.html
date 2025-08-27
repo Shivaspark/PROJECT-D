@@ -210,7 +210,23 @@
                         <p class="text-gray-300 mb-6 leading-relaxed">
                             Our quest is to empower young men and women, honing the skills needed for personal growth, to conquer the challenges facing our communities, and to forge unbreakable bonds of friendship and service across the world.
                         </p>
-                        <a href="#" class="text-accent-blue font-semibold hover:underline">Read Our Codex &rarr;</a>
+
+                        <!-- Expandable Content -->
+                        <div id="codex-content" class="hidden mb-6">
+                            <div class="bg-dark-bg p-6 rounded-lg border-l-4 border-accent-blue">
+                                <h4 class="text-xl font-bold text-accent-blue mb-4">The Rotaract Codex</h4>
+                                <p class="text-gray-300 mb-4 leading-relaxed">
+                                    Founded on the pillars of Service Above Self, we stand as guardians of change in our realm. Our code is simple yet profound: to serve with honor, lead with wisdom, and inspire with action. We believe that every young leader has the power to forge a legacy that transcends time.
+                                </p>
+                                <p class="text-gray-300 leading-relaxed">
+                                    Through community service, professional development, international understanding, and leadership training, we shape not just careers, but characters. Our fellowship extends beyond borders, creating a global network of change-makers who share a common vision of a better world.
+                                </p>
+                            </div>
+                        </div>
+
+                        <button id="codex-toggle" class="text-accent-blue font-semibold hover:underline focus:outline-none transition-all duration-300">
+                            <span id="codex-text">Read Our Codex</span> <span id="codex-arrow">&rarr;</span>
+                        </button>
                     </div>
                 </div>
             </div>
