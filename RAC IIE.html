@@ -751,7 +751,74 @@
                 mobileMenu.classList.add('hidden');
             });
         }
-        
+
+        // --- Active Navigation Logic ---
+        function updateActiveNavigation() {
+            const sections = ['home', 'about', 'events', 'projects', 'gallery', 'bulletin', 'game', 'board', 'contact'];
+            const navLinks = document.querySelectorAll('nav a[href^="#"]');
+            const mobileNavLinks = document.querySelectorAll('#mobile-menu a[href^="#"]');
+
+            let currentSection = '';
+            const scrollY = window.scrollY + 100; // Offset for header height
+
+            // Find the current section in view
+            for (let section of sections) {
+                const element = document.getElementById(section);
+                if (element) {
+                    const offsetTop = element.offsetTop;
+                    const offsetHeight = element.offsetHeight;
+
+                    if (scrollY >= offsetTop && scrollY < offsetTop + offsetHeight) {
+                        currentSection = section;
+                        break;
+                    }
+                }
+            }
+
+            // If no section found, use the first visible one from top
+            if (!currentSection) {
+                for (let section of sections) {
+                    const element = document.getElementById(section);
+                    if (element && element.offsetTop <= scrollY + 200) {
+                        currentSection = section;
+                    }
+                }
+            }
+
+            // Update desktop navigation
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href === `#${currentSection}`) {
+                    // Make active
+                    link.className = link.className.replace('text-gray-300', 'text-accent-blue font-bold');
+                    link.className = link.className.replace('hover:text-accent-blue', 'hover:text-white');
+                } else {
+                    // Make inactive
+                    link.className = link.className.replace('text-accent-blue font-bold', 'text-gray-300');
+                    link.className = link.className.replace('hover:text-white', 'hover:text-accent-blue');
+                }
+            });
+
+            // Update mobile navigation
+            mobileNavLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href === `#${currentSection}`) {
+                    // Make active
+                    link.className = link.className.replace('text-gray-300', 'text-accent-blue font-bold');
+                    link.className = link.className.replace('hover:bg-primary-blue', 'hover:bg-primary-blue hover:text-white');
+                } else {
+                    // Make inactive
+                    link.className = link.className.replace('text-accent-blue font-bold', 'text-gray-300');
+                    link.className = link.className.replace('hover:bg-primary-blue hover:text-white', 'hover:bg-primary-blue');
+                }
+            });
+        }
+
+        // Add scroll listener
+        window.addEventListener('scroll', updateActiveNavigation);
+        // Run on page load
+        document.addEventListener('DOMContentLoaded', updateActiveNavigation);
+
         const congratsModal = document.getElementById('congrats-modal');
         const closeCongratsModalBtn = document.getElementById('close-congrats-modal');
         closeCongratsModalBtn.addEventListener('click', () => congratsModal.classList.remove('show'));
