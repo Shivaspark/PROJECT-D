@@ -302,32 +302,103 @@
                     <p class="text-gray-400 mt-2">Forging a lasting legacy in our realm.</p>
                     <div class="w-24 h-1 bg-primary-blue mx-auto mt-4"></div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <!-- Project Card 1 -->
-                    <div class="bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
-                        <img src="assets/images/projects/p-2.jpg" alt="Project 1" class="w-full h-48 object-cover">
-                        <div class="p-6">
-                            <h3 class="text-xl font-bold my-2 text-accent-blue">DAYA 2026</h3>
-                            <p class="text-gray-400 mb-4">Daya is a legacy project of the Rotaract Club of INFO Institute of Engineering. Through this initiative, we have brought together 500+ orphaned children, engaging them in games and cultural activities. This project is not just a celebration, but a day dedicated to caring for and honoring these children. The true essence of Daya lies in its theme — Power of Mercy.</p>
-                            <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
-                        </div>
-                    </div>
-                    <!-- Project Card 2 -->
-                    <div class="bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
-                        <img src="assets/images/projects/P-1.jpg" alt="Project 2" class="w-full h-48 object-cover">
-                        <div class="p-6">
-                            <h3 class="text-xl font-bold my-2 text-accent-blue">STAR 2026</h3>
-                            <p class="text-gray-400 mb-4">STAR is a fellowship trip organized by the Rotaract Club of INFO Institute of Engineering. It brings Rotaractors together to socialize, travel, and share joyful experiences beyond regular meetings. The event not only creates fun and relaxation but also strengthens connections, teamwork, and lasting friendships among members</p>
-                            <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
-                        </div>
-                    </div>
-                    <!-- Project Card 3 -->
-                    <div class="bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
-                        <img src="assets/images/projects/p-3.jpg" alt="Project 3" class="w-full h-48 object-cover">
-                        <div class="p-6">
-                            <h3 class="text-xl font-bold my-2 text-accent-blue">ROBO 2026</h3>
-                            <p class="text-gray-400 mb-4">ROBO (Rise of Bright Opportunities) is a project of the Rotaract Club of INFO Institute of Engineering aimed at creating career opportunities for students and Rotaractors. Through this initiative, we organize a Job Fair that connects young talents with companies for placements and internships. The project helps participants explore career paths, gain professional exposure, and build a brighter future with new opportunities.</p>
-                            <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
+                <div class="relative">
+                    <button id="projects-prev" aria-label="Previous" class="hidden sm:flex items-center justify-center absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-primary-blue text-white w-10 h-10 rounded-full shadow hover:bg-accent-blue transition">
+                        <span>&larr;</span>
+                    </button>
+                    <button id="projects-next" aria-label="Next" class="hidden sm:flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-primary-blue text-white w-10 h-10 rounded-full shadow hover:bg-accent-blue transition">
+                        <span>&rarr;</span>
+                    </button>
+                    <div id="projects-viewport" class="overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth px-1">
+                        <div id="projects-track" class="flex gap-8 py-2">
+                            <!-- Slide 1 -->
+                            <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
+                                <div class="bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
+                                    <img src="assets/images/projects/p-2.jpg" alt="DAYA 2026" class="w-full h-48 object-cover">
+                                    <div class="p-6">
+                                        <h3 class="text-xl font-bold my-2 text-accent-blue">DAYA 2026</h3>
+                                        <p class="text-gray-400 mb-4">Daya is a legacy project of the Rotaract Club of INFO Institute of Engineering. Through this initiative, we have brought together 500+ orphaned children, engaging them in games and cultural activities. This project is not just a celebration, but a day dedicated to caring for and honoring these children. The true essence of Daya lies in its theme — Power of Mercy.</p>
+                                        <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Slide 2 -->
+                            <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
+                                <div class="bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
+                                    <img src="assets/images/projects/P-1.jpg" alt="STAR 2026" class="w-full h-48 object-cover">
+                                    <div class="p-6">
+                                        <h3 class="text-xl font-bold my-2 text-accent-blue">STAR 2026</h3>
+                                        <p class="text-gray-400 mb-4">STAR is a fellowship trip organized by the Rotaract Club of INFO Institute of Engineering. It brings Rotaractors together to socialize, travel, and share joyful experiences beyond regular meetings. The event not only creates fun and relaxation but also strengthens connections, teamwork, and lasting friendships among members</p>
+                                        <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Slide 3 -->
+                            <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
+                                <div class="bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
+                                    <img src="assets/images/projects/p-3.jpg" alt="ROBO 2026" class="w-full h-48 object-cover">
+                                    <div class="p-6">
+                                        <h3 class="text-xl font-bold my-2 text-accent-blue">ROBO 2026</h3>
+                                        <p class="text-gray-400 mb-4">ROBO (Rise of Bright Opportunities) is a project of the Rotaract Club of INFO Institute of Engineering aimed at creating career opportunities for students and Rotaractors. Through this initiative, we organize a Job Fair that connects young talents with companies for placements and internships. The project helps participants explore career paths, gain professional exposure, and build a brighter future with new opportunities.</p>
+                                        <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Slide 4 -->
+                            <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
+                                <div class="bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
+                                    <img src="https://placehold.co/400x250/00a9e0/ffffff?text=Mentorship+Drive" alt="Mentorship Drive" class="w-full h-48 object-cover">
+                                    <div class="p-6">
+                                        <h3 class="text-xl font-bold my-2 text-accent-blue">Mentorship Drive</h3>
+                                        <p class="text-gray-400 mb-4">A year-long mentorship program connecting seniors and alumni with students to build skills, confidence, and career clarity through guided sessions.</p>
+                                        <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Slide 5 -->
+                            <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
+                                <div class="bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
+                                    <img src="https://placehold.co/400x250/005daa/ffffff?text=Green+Earth" alt="Green Earth" class="w-full h-48 object-cover">
+                                    <div class="p-6">
+                                        <h3 class="text-xl font-bold my-2 text-accent-blue">Green Earth</h3>
+                                        <p class="text-gray-400 mb-4">Tree plantation and campus sustainability drives focusing on waste segregation, water conservation, and energy awareness campaigns.</p>
+                                        <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Slide 6 -->
+                            <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
+                                <div class="bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
+                                    <img src="https://placehold.co/400x250/00a9e0/ffffff?text=Health+Camp" alt="Health Camp" class="w-full h-48 object-cover">
+                                    <div class="p-6">
+                                        <h3 class="text-xl font-bold my-2 text-accent-blue">Community Health Camp</h3>
+                                        <p class="text-gray-400 mb-4">Periodic wellness checkups and health awareness sessions in collaboration with local hospitals benefiting nearby communities.</p>
+                                        <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Slide 7 -->
+                            <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
+                                <div class="bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
+                                    <img src="https://placehold.co/400x250/005daa/ffffff?text=Tech+Talks" alt="Tech Talks" class="w-full h-48 object-cover">
+                                    <div class="p-6">
+                                        <h3 class="text-xl font-bold my-2 text-accent-blue">Tech Talks</h3>
+                                        <p class="text-gray-400 mb-4">Monthly speaker series featuring industry experts on careers, innovation, entrepreneurship, and emerging technologies.</p>
+                                        <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Slide 8 -->
+                            <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
+                                <div class="bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
+                                    <img src="https://placehold.co/400x250/00a9e0/ffffff?text=Skill+Forge" alt="Skill Forge" class="w-full h-48 object-cover">
+                                    <div class="p-6">
+                                        <h3 class="text-xl font-bold my-2 text-accent-blue">Skill Forge</h3>
+                                        <p class="text-gray-400 mb-4">Hands-on workshops covering resume building, interview mastery, design thinking, and leadership through experiential learning.</p>
+                                        <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -926,6 +997,8 @@
             setTimeout(updateActiveNavigation, 500);
             // Initialize codex toggle functionality
             initializeCodexToggle();
+            // Initialize projects carousel
+            initializeProjectsCarousel();
         });
 
         // --- Know About Us Expand/Collapse Logic ---
@@ -970,6 +1043,37 @@
                     }, 100);
                 }
             });
+        }
+
+        // --- Projects Carousel ---
+        function initializeProjectsCarousel() {
+            const viewport = document.getElementById('projects-viewport');
+            const prevBtn = document.getElementById('projects-prev');
+            const nextBtn = document.getElementById('projects-next');
+            if (!viewport || !prevBtn || !nextBtn) return;
+
+            const getStep = () => viewport.clientWidth;
+
+            function updateButtons() {
+                const maxScroll = viewport.scrollWidth - viewport.clientWidth - 2;
+                prevBtn.disabled = viewport.scrollLeft <= 0;
+                nextBtn.disabled = viewport.scrollLeft >= maxScroll;
+                prevBtn.classList.toggle('opacity-50', prevBtn.disabled);
+                nextBtn.classList.toggle('opacity-50', nextBtn.disabled);
+                prevBtn.classList.toggle('cursor-not-allowed', prevBtn.disabled);
+                nextBtn.classList.toggle('cursor-not-allowed', nextBtn.disabled);
+            }
+
+            prevBtn.addEventListener('click', () => {
+                viewport.scrollBy({ left: -getStep(), behavior: 'smooth' });
+            });
+            nextBtn.addEventListener('click', () => {
+                viewport.scrollBy({ left: getStep(), behavior: 'smooth' });
+            });
+
+            viewport.addEventListener('scroll', updateButtons);
+            window.addEventListener('resize', updateButtons);
+            updateButtons();
         }
 
         const congratsModal = document.getElementById('congrats-modal');
