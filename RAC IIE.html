@@ -156,6 +156,9 @@
         .project-card img { height: 12rem; object-fit: cover; }
         .project-card .p-6 { display: flex; flex-direction: column; flex: 1; }
         .project-card .p-6 a { margin-top: auto; }
+        /* Vertically center content for the separator card */
+        .project-card--separator { align-items: center; justify-content: center; }
+        .project-card--separator .p-6 { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         @media (min-width: 1024px) {
             .project-card { min-height: 30rem; }
             .project-card img { height: 14rem; }
@@ -408,7 +411,7 @@
                             </div>
                             <!-- Separator: Upcoming Projects -->
                             <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
-                                <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden border border-accent-blue h-full flex flex-col items-center justify-center text-center p-8">
+                                <div class="project-card project-card--separator bg-dark-bg rounded-lg shadow-lg overflow-hidden border border-accent-blue h-full flex flex-col items-center justify-center text-center p-8">
                                     <div class="p-6 flex flex-col items-center text-center">
                                         <h3 class="text-2xl font-bold text-accent-blue mb-2">Upcoming Projects</h3>
                                         <p class="text-gray-400">Scroll right to explore what's coming next.</p>
