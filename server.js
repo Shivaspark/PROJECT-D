@@ -144,6 +144,22 @@ app.get('/api/gallery', (req, res) => {
   });
 });
 
+// DB Health
+app.get('/api/health/db', async (req, res) => {
+  try {
+    const col = await ensureMongo();
+    if (!col) {
+      const local = readDb();
+      return res.json({ connected: false, provider: 'json', message: 'MONGODB_URI not set or unreachable', count: (local.projects||[]).length });
+    }
+    await mongoDb.command({ ping: 1 });
+    const count = await col.countDocuments();
+    return res.json({ connected: true, provider: 'mongodb', db: mongoDb.databaseName, count });
+  } catch (e) {
+    return res.status(500).json({ connected: false, provider: 'mongodb', error: e.message });
+  }
+});
+
 // Projects API (CRUD)
 app.get('/api/projects', async (req, res) => {
   try {
