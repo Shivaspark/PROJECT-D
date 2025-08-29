@@ -6,7 +6,6 @@ const { MongoClient } = require('mongodb');
 const app = express();
 const PORT = process.env.PORT || 8081;
 
-app.use(express.static(__dirname));
 app.use(express.json({ limit: '1mb' }));
 
 function basicAuth(req, res, next) {
@@ -129,6 +128,11 @@ app.get('/admin', basicAuth, (req, res) => {
   res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
+// Also protect direct access to admin.html
+app.get('/admin.html', basicAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
 // Gallery API
 app.get('/api/gallery', (req, res) => {
   const galleryDir = path.join(__dirname, 'assets', 'images', 'gallery');
@@ -185,6 +189,8 @@ app.delete('/api/projects/:id', basicAuth, async (req, res) => {
     res.status(500).json({ error: 'Failed to delete' });
   }
 });
+
+app.use(express.static(__dirname));
 
 app.listen(PORT, () => {
   console.log(`🚀 Rotaract Club website running on http://localhost:${PORT}`);
