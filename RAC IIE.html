@@ -421,32 +421,48 @@
                     <p class="text-gray-400 mt-2">Get Connected with our Projects.</p>
                     <div class="w-24 h-1 bg-primary-blue mx-auto mt-4"></div>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <!-- Project Card 1 -->
-                    <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-                        <img src="assets/images/projects/p-2.jpg" alt="Project 1" class="w-full h-48 object-cover">
-                        <div class="p-6">
-                            <h3 class="text-xl font-bold my-2 text-accent-blue">DAYA 2026</h3>
-                            <p class="text-gray-400 mb-4">An epic to provide enchanted scrolls and mentorship to young scribes in nearby villages.</p>
-                            <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
-                        </div>
-                    </div>
-                    <!-- Project Card 2 -->
-                    <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-                        <img src="https://placehold.co/400x250/00a9e0/ffffff?text=The+Cleansing+Flame" alt="Project 2" class="w-full h-48 object-cover">
-                        <div class="p-6">
-                            <h3 class="text-xl font-bold my-2 text-accent-blue">The Cleansing Flame</h3>
-                            <p class="text-gray-400 mb-4">Regular crusades and awareness campaigns to purify the land and promote well-being.</p>
-                            <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
-                        </div>
-                    </div>
-                    <!-- Project Card 3 -->
-                    <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-                        <img src="https://placehold.co/400x250/005daa/ffffff?text=The+Forging+Series" alt="Project 3" class="w-full h-48 object-cover">
-                        <div class="p-6">
-                            <h3 class="text-xl font-bold my-2 text-accent-blue">The Forging Series</h3>
-                            <p class="text-gray-400 mb-4">Summoning master artisans and sages to share their wisdom and sharpen the skills of our clan.</p>
-                            <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
+                <div class="relative">
+                    <button id="upcoming-prev" aria-label="Previous" class="hidden sm:flex items-center justify-center absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-primary-blue text-white w-10 h-10 rounded-full shadow hover:bg-accent-blue transition">
+                        <span>&lt;</span>
+                    </button>
+                    <button id="upcoming-next" aria-label="Next" class="hidden sm:flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-primary-blue text-white w-10 h-10 rounded-full shadow hover:bg-accent-blue transition">
+                        <span>&gt;</span>
+                    </button>
+                    <div id="upcoming-viewport" class="overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth px-1">
+                        <div id="upcoming-track" class="flex gap-8 py-2">
+                            <!-- Slide 1 -->
+                            <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
+                                <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
+                                    <img src="assets/images/projects/p-2.jpg" alt="DAYA 2026" class="w-full object-cover">
+                                    <div class="p-6">
+                                        <h3 class="text-xl font-bold my-2 text-accent-blue">DAYA 2026</h3>
+                                        <p class="text-gray-400 mb-4">An epic to provide enchanted scrolls and mentorship to young scribes in nearby villages.</p>
+                                        <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Slide 2 -->
+                            <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
+                                <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
+                                    <img src="https://placehold.co/400x250/00a9e0/ffffff?text=The+Cleansing+Flame" alt="The Cleansing Flame" class="w-full object-cover">
+                                    <div class="p-6">
+                                        <h3 class="text-xl font-bold my-2 text-accent-blue">The Cleansing Flame</h3>
+                                        <p class="text-gray-400 mb-4">Regular crusades and awareness campaigns to purify the land and promote well-being.</p>
+                                        <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Slide 3 -->
+                            <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
+                                <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
+                                    <img src="https://placehold.co/400x250/005daa/ffffff?text=The+Forging+Series" alt="The Forging Series" class="w-full object-cover">
+                                    <div class="p-6">
+                                        <h3 class="text-xl font-bold my-2 text-accent-blue">The Forging Series</h3>
+                                        <p class="text-gray-400 mb-4">Summoning master artisans and sages to share their wisdom and sharpen the skills of our clan.</p>
+                                        <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1055,10 +1071,10 @@
         }
 
         // --- Projects Carousel ---
-        function initializeProjectsCarousel() {
-            const viewport = document.getElementById('projects-viewport');
-            const prevBtn = document.getElementById('projects-prev');
-            const nextBtn = document.getElementById('projects-next');
+        function setupCarousel(viewportId, prevId, nextId) {
+            const viewport = document.getElementById(viewportId);
+            const prevBtn = document.getElementById(prevId);
+            const nextBtn = document.getElementById(nextId);
             if (!viewport || !prevBtn || !nextBtn) return;
 
             const getStep = () => viewport.clientWidth;
@@ -1083,6 +1099,11 @@
             viewport.addEventListener('scroll', updateButtons);
             window.addEventListener('resize', updateButtons);
             updateButtons();
+        }
+
+        function initializeProjectsCarousel() {
+            setupCarousel('projects-viewport', 'projects-prev', 'projects-next');
+            setupCarousel('upcoming-viewport', 'upcoming-prev', 'upcoming-next');
         }
 
         const congratsModal = document.getElementById('congrats-modal');
