@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const { Pool } = require('pg');
+const { MongoClient } = require('mongodb');
 
 const app = express();
 const PORT = process.env.PORT || 8081;
@@ -34,41 +34,34 @@ function writeDb(db) {
   fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
 }
 
-// Postgres (Neon) setup
-let pool = null;
-if (process.env.DATABASE_URL) {
-  pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false }
-  });
-  (async () => {
-    try {
-      await pool.query(`
-        create table if not exists projects (
-          id text primary key,
-          type text not null check (type in ('flagship','upcoming')),
-          title text not null,
-          description text not null,
-          image text not null
-        )
-      `);
-    } catch (e) {
-      console.error('DB init failed:', e.message);
-    }
-  })();
+// MongoDB setup
+let mongoClient = null;
+let mongoDb = null;
+let projectsCol = null;
+
+async function ensureMongo() {
+  if (projectsCol) return projectsCol;
+  const uri = process.env.MONGODB_URI || (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('mongodb') ? process.env.DATABASE_URL : null);
+  if (!uri) return null;
+  mongoClient = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 });
+  await mongoClient.connect();
+  const dbName = process.env.MONGODB_DB || 'rotaract';
+  mongoDb = mongoClient.db(dbName);
+  projectsCol = mongoDb.collection('projects');
+  try {
+    await projectsCol.createIndex({ id: 1 }, { unique: true });
+  } catch (e) {
+    // ignore index creation errors (may already exist)
+  }
+  return projectsCol;
 }
 
 async function dbGetProjects(type) {
-  if (pool) {
-    const params = [];
-    let sql = 'select id, type, title, description, image from projects';
-    if (type === 'flagship' || type === 'upcoming') {
-      sql += ' where type = $1';
-      params.push(type);
-    }
-    sql += ' order by title asc';
-    const { rows } = await pool.query(sql, params);
-    return rows;
+  const col = await ensureMongo();
+  if (col) {
+    const query = (type === 'flagship' || type === 'upcoming') ? { type } : {};
+    const items = await col.find(query).sort({ title: 1 }).toArray();
+    return items.map(({ id, type, title, description, image }) => ({ id, type, title, description, image }));
   } else {
     const db = readDb();
     let items = db.projects || [];
@@ -78,28 +71,32 @@ async function dbGetProjects(type) {
 }
 async function dbCreateProject({ id, title, description, image, type }) {
   const newId = id || `${type}-${Date.now()}`;
-  if (pool) {
-    await pool.query(
-      'insert into projects (id, type, title, description, image) values ($1,$2,$3,$4,$5) on conflict (id) do update set type=excluded.type, title=excluded.title, description=excluded.description, image=excluded.image',
-      [newId, type, title, description, image]
+  const col = await ensureMongo();
+  if (col) {
+    await col.updateOne(
+      { id: newId },
+      { $set: { id: newId, type, title, description, image } },
+      { upsert: true }
     );
-    const { rows } = await pool.query('select id, type, title, description, image from projects where id=$1', [newId]);
-    return rows[0];
+    const created = await col.findOne({ id: newId }, { projection: { _id: 0 } });
+    return created;
   } else {
     const db = readDb();
     const item = { id: newId, title, description, image, type };
-    db.projects.push(item);
+    const existingIdx = db.projects.findIndex(p => p.id === newId);
+    if (existingIdx !== -1) db.projects[existingIdx] = item; else db.projects.push(item);
     writeDb(db);
     return item;
   }
 }
 async function dbUpdateProject(id, { title, description, image, type }) {
-  if (pool) {
-    const { rows } = await pool.query('select 1 from projects where id=$1', [id]);
-    if (!rows.length) return null;
-    await pool.query('update projects set title=$1, description=$2, image=$3, type=$4 where id=$5', [title, description, image, type, id]);
-    const result = await pool.query('select id, type, title, description, image from projects where id=$1', [id]);
-    return result.rows[0];
+  const col = await ensureMongo();
+  if (col) {
+    const exists = await col.findOne({ id });
+    if (!exists) return null;
+    await col.updateOne({ id }, { $set: { title, description, image, type: type || exists.type } });
+    const updated = await col.findOne({ id }, { projection: { _id: 0 } });
+    return updated;
   } else {
     const db = readDb();
     const idx = db.projects.findIndex(p => p.id === id);
@@ -110,9 +107,10 @@ async function dbUpdateProject(id, { title, description, image, type }) {
   }
 }
 async function dbDeleteProject(id) {
-  if (pool) {
-    const { rows } = await pool.query('delete from projects where id=$1 returning id', [id]);
-    return rows.length > 0;
+  const col = await ensureMongo();
+  if (col) {
+    const { deletedCount } = await col.deleteOne({ id });
+    return deletedCount > 0;
   } else {
     const db = readDb();
     const before = db.projects.length;
@@ -160,6 +158,7 @@ app.post('/api/projects', basicAuth, async (req, res) => {
     const created = await dbCreateProject({ id, title, description, image, type });
     res.status(201).json({ project: created });
   } catch (e) {
+    if (e && e.code === 11000) return res.status(409).json({ error: 'Duplicate id' });
     res.status(500).json({ error: 'Failed to create' });
   }
 });
