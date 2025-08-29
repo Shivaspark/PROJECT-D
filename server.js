@@ -8,6 +8,17 @@ const PORT = process.env.PORT || 8081;
 app.use(express.static(__dirname));
 app.use(express.json({ limit: '1mb' }));
 
+function basicAuth(req, res, next) {
+  const header = req.headers['authorization'] || '';
+  const token = header.split(' ')[1] || '';
+  const [user, pass] = Buffer.from(token, 'base64').toString().split(':');
+  const ADMIN_USER = process.env.ADMIN_USER;
+  const ADMIN_PASS = process.env.ADMIN_PASS;
+  if (ADMIN_USER && ADMIN_PASS && user === ADMIN_USER && pass === ADMIN_PASS) return next();
+  res.set('WWW-Authenticate', 'Basic realm="Admin"');
+  return res.status(401).send('Authentication required');
+}
+
 const DB_PATH = path.join(__dirname, 'data', 'projects.json');
 function readDb() {
   try {
@@ -24,6 +35,11 @@ function writeDb(db) {
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'RAC IIE.html'));
+});
+
+// Admin page
+app.get('/admin', basicAuth, (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
 // Gallery API
@@ -46,7 +62,7 @@ app.get('/api/projects', (req, res) => {
   res.json({ projects: items });
 });
 
-app.post('/api/projects', (req, res) => {
+app.post('/api/projects', basicAuth, (req, res) => {
   const { id, title, description, image, type } = req.body;
   if (!title || !description || !image || !type) return res.status(400).json({ error: 'Missing fields' });
   const db = readDb();
@@ -56,7 +72,7 @@ app.post('/api/projects', (req, res) => {
   res.status(201).json({ project: newItem });
 });
 
-app.put('/api/projects/:id', (req, res) => {
+app.put('/api/projects/:id', basicAuth, (req, res) => {
   const { id } = req.params;
   const { title, description, image, type } = req.body;
   const db = readDb();
@@ -67,7 +83,7 @@ app.put('/api/projects/:id', (req, res) => {
   res.json({ project: db.projects[idx] });
 });
 
-app.delete('/api/projects/:id', (req, res) => {
+app.delete('/api/projects/:id', basicAuth, (req, res) => {
   const { id } = req.params;
   const db = readDb();
   const before = db.projects.length;
