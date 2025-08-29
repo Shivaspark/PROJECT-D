@@ -546,6 +546,49 @@
             </div>
         </section>
 
+        <!-- Projects Admin -->
+        <section id="projects-admin" class="py-16 bg-dark-secondary">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-8">
+                    <h2 class="text-2xl md:text-3xl font-black text-white">Manage Projects</h2>
+                    <p class="text-gray-400 mt-1">Add, edit, and delete projects (local demo storage)</p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <form id="project-form" class="bg-dark-bg p-6 rounded-lg border border-gray-700">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-gray-300 text-sm mb-1">Title</label>
+                                <input id="pf-title" class="w-full bg-dark-secondary border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="Project title" />
+                            </div>
+                            <div>
+                                <label class="block text-gray-300 text-sm mb-1">Type</label>
+                                <select id="pf-type" class="w-full bg-dark-secondary border border-gray-600 rounded px-3 py-2 text-gray-200">
+                                    <option value="flagship">Flagship</option>
+                                    <option value="upcoming">Upcoming</option>
+                                </select>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-gray-300 text-sm mb-1">Image URL</label>
+                                <input id="pf-image" class="w-full bg-dark-secondary border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="assets/images/projects/p-2.jpg or https://..." />
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-gray-300 text-sm mb-1">Description</label>
+                                <textarea id="pf-desc" rows="3" class="w-full bg-dark-secondary border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="Project description..."></textarea>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex gap-3">
+                            <button id="pf-submit" type="submit" class="bg-primary-blue text-white px-5 py-2 rounded-full hover:bg-accent-blue transition">Add Project</button>
+                            <button id="pf-reset" type="button" class="bg-gray-700 text-white px-4 py-2 rounded-full hover:bg-gray-600 transition">Reset</button>
+                        </div>
+                    </form>
+                    <div class="bg-dark-bg p-6 rounded-lg border border-gray-700">
+                        <h3 class="text-xl font-bold text-accent-blue mb-4">Existing Projects</h3>
+                        <div id="projects-list" class="space-y-3"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Projects Gallery (Auto Carousel) -->
         <section id="projects-media" class="py-20 bg-dark-bg">
             <div class="container mx-auto px-6">
@@ -1111,14 +1154,12 @@
         // Run on page load
         document.addEventListener('DOMContentLoaded', () => {
             updateActiveNavigation();
-            // Set initial active state to home
             setTimeout(updateActiveNavigation, 500);
-            // Initialize codex toggle functionality
             initializeCodexToggle();
-            // Initialize projects carousel
             initializeProjectsCarousel();
-            // Initialize auto gallery
             initializeAutoGallery();
+            loadProjectsAndRender();
+            attachAdminHandlers();
         });
 
         // --- Know About Us Expand/Collapse Logic ---
@@ -1199,6 +1240,132 @@
         function initializeProjectsCarousel() {
             setupCarousel('projects-viewport', 'projects-prev', 'projects-next');
             setupCarousel('upcoming-viewport', 'upcoming-prev', 'upcoming-next');
+        }
+
+        // --- Projects data render ---
+        function projectCardHTML(p) {
+            return `
+            <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
+                <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
+                    <img src="${p.image}" alt="${p.title}" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold my-2 text-accent-blue">${p.title}</h3>
+                        <p class="text-gray-400 mb-4">${p.description}</p>
+                        <a href="#contact" class="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest &rarr;</a>
+                    </div>
+                </div>
+            </div>`;
+        }
+        function separatorCardHTML() {
+            return `
+            <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
+                <div class="project-card project-card--separator bg-dark-bg rounded-lg shadow-lg overflow-hidden border border-accent-blue h-full flex flex-col items-center justify-center text-center p-8">
+                    <div class="p-6 flex flex-col items-center text-center">
+                        <h3 class="text-2xl font-bold text-accent-blue mb-2">Upcoming Projects</h3>
+                        <p class="text-gray-400">Scroll right to explore what's coming next.</p>
+                        <p class="text-gray-400 italic mt-3">“Small acts today shape the big changes of tomorrow.”</p>
+                    </div>
+                </div>
+            </div>`;
+        }
+        async function loadProjectsAndRender() {
+            try {
+                const res = await fetch('/api/projects');
+                const { projects } = await res.json();
+                const flagship = projects.filter(p => p.type === 'flagship');
+                const upcoming = projects.filter(p => p.type === 'upcoming');
+
+                const projTrack = document.getElementById('projects-track');
+                const upTrack = document.getElementById('upcoming-track');
+                if (projTrack) {
+                    projTrack.innerHTML = flagship.map(projectCardHTML).join('');
+                }
+                if (upTrack) {
+                    upTrack.innerHTML = [
+                        ...flagship.map(projectCardHTML),
+                        separatorCardHTML(),
+                        ...upcoming.map(projectCardHTML)
+                    ].join('');
+                }
+            } catch (e) {
+                console.error('Failed to load projects', e);
+            }
+        }
+
+        // --- Admin handlers ---
+        function projectRowHTML(p) {
+            return `
+            <div class="border border-gray-700 rounded p-3 flex flex-col md:flex-row md:items-center gap-3">
+                <img src="${p.image}" alt="${p.title}" class="w-24 h-16 object-cover rounded border border-gray-600"/>
+                <div class="flex-1">
+                    <div class="text-accent-blue font-semibold">${p.title}</div>
+                    <div class="text-gray-400 text-sm truncate">${p.description}</div>
+                    <div class="text-gray-500 text-xs mt-1">Type: ${p.type} • ID: ${p.id}</div>
+                </div>
+                <div class="flex gap-2">
+                    <button data-id="${p.id}" class="btn-edit bg-primary-blue text-white px-3 py-1 rounded-full">Edit</button>
+                    <button data-id="${p.id}" class="btn-delete bg-gray-700 text-white px-3 py-1 rounded-full">Delete</button>
+                </div>
+            </div>`
+        }
+        async function refreshAdminList() {
+            const list = document.getElementById('projects-list');
+            if (!list) return;
+            const res = await fetch('/api/projects');
+            const { projects } = await res.json();
+            list.innerHTML = projects.map(projectRowHTML).join('');
+            list.querySelectorAll('.btn-delete').forEach(btn => btn.addEventListener('click', async (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                if (!confirm('Delete this project?')) return;
+                await fetch(`/api/projects/${id}`, { method: 'DELETE' });
+                await loadProjectsAndRender();
+                await refreshAdminList();
+            }));
+            list.querySelectorAll('.btn-edit').forEach(btn => btn.addEventListener('click', async (e) => {
+                const id = e.currentTarget.getAttribute('data-id');
+                const res = await fetch('/api/projects');
+                const { projects } = await res.json();
+                const item = projects.find(p => p.id === id);
+                if (!item) return;
+                document.getElementById('pf-title').value = item.title;
+                document.getElementById('pf-type').value = item.type;
+                document.getElementById('pf-image').value = item.image;
+                document.getElementById('pf-desc').value = item.description;
+                document.getElementById('pf-submit').textContent = 'Update Project';
+                document.getElementById('project-form').setAttribute('data-edit-id', id);
+                window.scrollTo({ top: document.getElementById('projects-admin').offsetTop - 60, behavior: 'smooth' });
+            }));
+        }
+        function attachAdminHandlers() {
+            const form = document.getElementById('project-form');
+            if (!form) return;
+            const resetBtn = document.getElementById('pf-reset');
+            resetBtn.addEventListener('click', () => {
+                form.reset();
+                form.removeAttribute('data-edit-id');
+                document.getElementById('pf-submit').textContent = 'Add Project';
+            });
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const payload = {
+                    title: document.getElementById('pf-title').value.trim(),
+                    type: document.getElementById('pf-type').value,
+                    image: document.getElementById('pf-image').value.trim(),
+                    description: document.getElementById('pf-desc').value.trim()
+                };
+                const editId = form.getAttribute('data-edit-id');
+                if (editId) {
+                    await fetch(`/api/projects/${editId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                } else {
+                    await fetch('/api/projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                }
+                form.reset();
+                form.removeAttribute('data-edit-id');
+                document.getElementById('pf-submit').textContent = 'Add Project';
+                await loadProjectsAndRender();
+                await refreshAdminList();
+            });
+            refreshAdminList();
         }
 
         // --- Auto Gallery Carousel ---

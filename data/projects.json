@@ -1,0 +1,35 @@
+{
+  "projects": [
+    {
+      "id": "flg-daya-2026",
+      "type": "flagship",
+      "title": "DAYA 2026",
+      "description": "Daya is a legacy project of the Rotaract Club of INFO Institute of Engineering. Through this initiative, we have brought together 500+ orphaned children, engaging them in games and cultural activities. This project is not just a celebration, but a day dedicated to caring for and honoring these children. The true essence of Daya lies in its theme — Power of Mercy.",
+      "image": "assets/images/projects/p-2.jpg"
+    },
+    {
+      "id": "flg-star-2026",
+      "type": "flagship",
+      "title": "STAR 2026",
+      "description": "STAR is a fellowship trip organized by the Rotaract Club of INFO Institute of Engineering. It brings Rotaractors together to socialize, travel, and share joyful experiences beyond regular meetings. The event not only creates fun and relaxation but also strengthens connections, teamwork, and lasting friendships among members",
+      "image": "assets/images/projects/P-1.jpg"
+    },
+    {
+      "id": "flg-robo-2026",
+      "type": "flagship",
+      "title": "ROBO 2026",
+      "description": "ROBO (Rise of Bright Opportunities) is a project of the Rotaract Club of INFO Institute of Engineering aimed at creating career opportunities for students and Rotaractors. Through this initiative, we organize a Job Fair that connects young talents with companies for placements and internships. The project helps participants explore career paths, gain professional exposure, and build a brighter future with new opportunities.",
+      "image": "assets/images/projects/p-3.jpg"
+    },
+
+    {"id": "up-cleansing-flame","type": "upcoming","title": "The Cleansing Flame","description": "Regular crusades and awareness campaigns to purify the land and promote well-being.","image": "https://placehold.co/400x250/00a9e0/ffffff?text=The+Cleansing+Flame"},
+    {"id": "up-forging-series","type": "upcoming","title": "The Forging Series","description": "Summoning master artisans and sages to share their wisdom and sharpen the skills of our clan.","image": "https://placehold.co/400x250/005daa/ffffff?text=The+Forging+Series"},
+    {"id": "up-mentorship-drive","type": "upcoming","title": "Mentorship Drive","description": "A year-long mentorship program connecting seniors and alumni with students to build skills, confidence, and career clarity through guided sessions.","image": "https://placehold.co/400x250/00a9e0/ffffff?text=Mentorship+Drive"},
+    {"id": "up-green-earth","type": "upcoming","title": "Green Earth","description": "Tree plantation and campus sustainability drives focusing on waste segregation, water conservation, and energy awareness campaigns.","image": "https://placehold.co/400x250/005daa/ffffff?text=Green+Earth"},
+    {"id": "up-health-camp","type": "upcoming","title": "Community Health Camp","description": "Periodic wellness checkups and health awareness sessions in collaboration with local hospitals benefiting nearby communities.","image": "https://placehold.co/400x250/00a9e0/ffffff?text=Health+Camp"},
+    {"id": "up-tech-talks","type": "upcoming","title": "Tech Talks","description": "Monthly speaker series featuring industry experts on careers, innovation, entrepreneurship, and emerging technologies.","image": "https://placehold.co/400x250/005daa/ffffff?text=Tech+Talks"},
+    {"id": "up-skill-forge","type": "upcoming","title": "Skill Forge","description": "Hands-on workshops covering resume building, interview mastery, design thinking, and leadership through experiential learning.","image": "https://placehold.co/400x250/00a9e0/ffffff?text=Skill+Forge"},
+    {"id": "up-entrepreneur-bootcamp","type": "upcoming","title": "Entrepreneurship Bootcamp","description": "Startup-focused workshops and mentorship to help students transform ideas into action with practical guidance.","image": "https://placehold.co/400x250/005daa/ffffff?text=Entrepreneur+Bootcamp"},
+    {"id": "up-cultural-connect","type": "upcoming","title": "Cultural Connect","description": "Inter-college cultural exchange and collaboration to celebrate diversity and strengthen community bonding.","image": "https://placehold.co/400x250/00a9e0/ffffff?text=Cultural+Connect"}
+  ]
+}
