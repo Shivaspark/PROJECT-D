@@ -241,4 +241,24 @@ app.use(express.static(__dirname));
 app.listen(PORT, () => {
   console.log(`🚀 Rotaract Club website running on http://localhost:${PORT}`);
   console.log(`📁 Serving static files from: ${__dirname}`);
+  (async () => {
+    try {
+      const col = await ensureMongo();
+      if (col) {
+        const count = await col.countDocuments();
+        if (count === 0) {
+          const source = readDb();
+          const items = Array.isArray(source.projects) ? source.projects : [];
+          for (const p of items) {
+            const { id, type, title, description, image } = p;
+            await col.updateOne({ id }, { $set: { id, type, title, description, image } }, { upsert: true });
+          }
+          const newCount = await col.countDocuments();
+          console.log(`Seeded ${newCount} projects into MongoDB`);
+        }
+      }
+    } catch (e) {
+      console.error('Seeding skipped due to error:', e.message);
+    }
+  })();
 });
