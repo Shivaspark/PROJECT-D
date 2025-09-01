@@ -479,7 +479,9 @@
     function psCardHTML(s) {
       return `
         <div class="border border-gray-700 rounded p-3 flex items-start gap-3">
-          <img src="${s.src}" alt="${s.title || ''}" class="w-24 h-16 object-cover rounded border border-gray-600 cursor-zoom-in" data-src="${s.src}" data-title="${s.title || ''}"/>
+          <div class="w-24 aspect-[4/5] overflow-hidden rounded border border-gray-600">
+            <img src="${s.src}" alt="${s.title || ''}" class="w-full h-full object-cover cursor-zoom-in" data-src="${s.src}" data-title="${s.title || ''}"/>
+          </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
               <div class="text-accent-blue font-semibold">Slot ${s.slot}</div>
