@@ -63,6 +63,7 @@ let mongoClient = null;
 let mongoDb = null;
 let projectsCol = null;
 let highlightsCol = null;
+let powerStonesCol = null;
 
 async function ensureMongo() {
   if (projectsCol) return projectsCol;
@@ -101,6 +102,21 @@ async function ensureHighlights() {
     } catch (e) {}
   }
   return highlightsCol;
+}
+
+async function ensurePowerStones() {
+  if (!mongoDb) {
+    const col = await ensureMongo();
+    if (!col) return null;
+  }
+  if (!powerStonesCol) {
+    powerStonesCol = mongoDb.collection('powerstones');
+    try {
+      await powerStonesCol.createIndex({ id: 1 }, { unique: true });
+      await powerStonesCol.createIndex({ slot: 1 }, { unique: true });
+    } catch (e) {}
+  }
+  return powerStonesCol;
 }
 
 async function dbGetProjects(type) {
@@ -281,6 +297,70 @@ app.delete('/api/highlights/:id', basicAuth, async (req, res) => {
   }
 });
 
+// Power Stones API
+app.get('/api/power-stones', async (req, res) => {
+  try {
+    const col = await ensurePowerStones();
+    if (col) {
+      const docs = await col.find({}).sort({ slot: 1 }).project({ _id: 0, id: 1, slot: 1, src: 1, title: 1 }).toArray();
+      if (docs.length) return res.json({ stones: docs });
+    }
+    // Fallback to defaults
+    const defaults = [
+      { slot: 1, id: 'ps-1', src: 'https://placehold.co/600x400/eab308/ffffff?text=Glory', title: 'Glory' },
+      { slot: 2, id: 'ps-2', src: 'https://placehold.co/600x400/22c55e/ffffff?text=Conquest', title: 'Conquest' },
+      { slot: 3, id: 'ps-3', src: 'https://placehold.co/600x400/8b5cf6/ffffff?text=Feast', title: 'Feast' },
+      { slot: 4, id: 'ps-4', src: 'https://placehold.co/600x400/3b82f6/ffffff?text=Alliance', title: 'Alliance' },
+      { slot: 5, id: 'ps-5', src: 'https://placehold.co/600x400/ef4444/ffffff?text=Council', title: 'Council' },
+      { slot: 6, id: 'ps-6', src: 'https://placehold.co/600x400/14b8a6/ffffff?text=Valor', title: 'Valor' }
+    ];
+    return res.json({ stones: defaults });
+  } catch (e) {
+    return res.status(500).json({ stones: [], error: e.message });
+  }
+});
+
+app.get('/api/power-stones/admin', basicAuth, async (req, res) => {
+  try {
+    const col = await ensurePowerStones();
+    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    const items = await col.find({}).sort({ slot: 1 }).project({ _id: 0 }).toArray();
+    return res.json({ stones: items });
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to load stones' });
+  }
+});
+
+app.post('/api/power-stones', basicAuth, async (req, res) => {
+  try {
+    const { id, slot, src, title } = req.body || {};
+    if (!Number.isInteger(slot) || slot < 1 || slot > 6) return res.status(400).json({ error: 'slot must be 1..6' });
+    if (!src || typeof src !== 'string' || !src.trim()) return res.status(400).json({ error: 'src is required' });
+    const col = await ensurePowerStones();
+    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    const newId = id || `ps-${slot}`;
+    await col.updateOne({ slot }, { $set: { id: newId, slot, src: src.trim(), title: title || '' } }, { upsert: true });
+    const saved = await col.findOne({ slot }, { projection: { _id: 0 } });
+    return res.status(201).json({ stone: saved });
+  } catch (e) {
+    if (e && e.code === 11000) return res.status(409).json({ error: 'Duplicate key' });
+    return res.status(500).json({ error: 'Failed to save stone' });
+  }
+});
+
+app.delete('/api/power-stones/:id', basicAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const col = await ensurePowerStones();
+    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    const { deletedCount } = await col.deleteOne({ id });
+    if (!deletedCount) return res.status(404).json({ error: 'Not found' });
+    return res.status(204).end();
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to delete stone' });
+  }
+});
+
 // Upload API
 app.post('/api/upload', basicAuth, upload.single('file'), (req, res) => {
   try {
@@ -422,6 +502,24 @@ app.listen(PORT, () => {
             if (images.length) await hcol.insertMany(images, { ordered: false }).catch(() => {});
             const seeded = await hcol.countDocuments();
             console.log(`Highlights seeded: ${seeded}`);
+          }
+        }
+        // Seed power stones if empty with defaults
+        const pscol = await ensurePowerStones();
+        if (pscol) {
+          const pscount = await pscol.countDocuments();
+          if (pscount === 0) {
+            const defaults = [
+              { slot: 1, id: 'ps-1', src: 'https://placehold.co/600x400/eab308/ffffff?text=Glory', title: 'Glory' },
+              { slot: 2, id: 'ps-2', src: 'https://placehold.co/600x400/22c55e/ffffff?text=Conquest', title: 'Conquest' },
+              { slot: 3, id: 'ps-3', src: 'https://placehold.co/600x400/8b5cf6/ffffff?text=Feast', title: 'Feast' },
+              { slot: 4, id: 'ps-4', src: 'https://placehold.co/600x400/3b82f6/ffffff?text=Alliance', title: 'Alliance' },
+              { slot: 5, id: 'ps-5', src: 'https://placehold.co/600x400/ef4444/ffffff?text=Council', title: 'Council' },
+              { slot: 6, id: 'ps-6', src: 'https://placehold.co/600x400/14b8a6/ffffff?text=Valor', title: 'Valor' }
+            ];
+            await pscol.insertMany(defaults, { ordered: true }).catch(() => {});
+            const newCount = await pscol.countDocuments();
+            console.log(`Power Stones seeded: ${newCount}`);
           }
         }
       }
