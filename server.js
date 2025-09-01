@@ -88,15 +88,17 @@ async function ensureMongo() {
 }
 
 async function dbGetProjects(type) {
-  const allowed = new Set(['flagship','upcoming','existing']);
+  const allowed = new Set(['existing','upcoming']);
   const col = await ensureMongo();
   if (col) {
-    const query = allowed.has(type) ? { type } : {};
+    const query = allowed.has(type)
+      ? (type === 'existing' ? { type: { $in: ['existing', 'flagship'] } } : { type })
+      : {};
     const items = await col.find(query).sort({ title: 1 }).toArray();
-    return items.map(({ id, type, title, description, image }) => ({ id, type, title, description, image }));
+    return items.map(({ id, type, title, description, image }) => ({ id, type: type === 'flagship' ? 'existing' : type, title, description, image }));
   } else {
     const db = readDb();
-    let items = db.projects || [];
+    let items = (db.projects || []).map(p => ({ ...p, type: p.type === 'flagship' ? 'existing' : p.type }));
     if (allowed.has(type)) items = items.filter(p => p.type === type);
     return items;
   }
@@ -306,9 +308,14 @@ app.listen(PORT, () => {
           const newCount = await col.countDocuments();
           console.log(`Seeded ${newCount} projects into MongoDB`);
         }
+        // Migrate any legacy 'flagship' types to 'existing'
+        const migrate = await col.updateMany({ type: 'flagship' }, { $set: { type: 'existing' } });
+        if (migrate && (migrate.modifiedCount || 0) > 0) {
+          console.log(`Migrated ${migrate.modifiedCount} flagship projects to existing`);
+        }
       }
     } catch (e) {
-      console.error('Seeding skipped due to error:', e.message);
+      console.error('Seeding/migration skipped due to error:', e.message);
     }
   })();
 });
