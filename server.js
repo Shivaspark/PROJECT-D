@@ -64,6 +64,7 @@ let mongoDb = null;
 let projectsCol = null;
 let highlightsCol = null;
 let powerStonesCol = null;
+let bulletinsCol = null;
 
 async function ensureMongo() {
   if (projectsCol) return projectsCol;
@@ -117,6 +118,22 @@ async function ensurePowerStones() {
     } catch (e) {}
   }
   return powerStonesCol;
+}
+
+async function ensureBulletins() {
+  if (!mongoDb) {
+    const col = await ensureMongo();
+    if (!col) return null;
+  }
+  if (!bulletinsCol) {
+    bulletinsCol = mongoDb.collection('bulletins');
+    try {
+      await bulletinsCol.createIndex({ id: 1 }, { unique: true });
+      await bulletinsCol.createIndex({ lang: 1, date: -1 });
+      await bulletinsCol.createIndex({ createdAt: -1 });
+    } catch (e) {}
+  }
+  return bulletinsCol;
 }
 
 async function dbGetProjects(type) {
@@ -361,6 +378,74 @@ app.delete('/api/power-stones/:id', basicAuth, async (req, res) => {
   }
 });
 
+// Bulletins API
+app.get('/api/bulletins', async (req, res) => {
+  try {
+    const lang = (req.query.lang || 'ta').toLowerCase();
+    const col = await ensureBulletins();
+    if (col) {
+      const items = await col.find({ lang }).sort({ date: -1, createdAt: -1 }).project({ _id: 0 }).toArray();
+      const latest = items[0] || null;
+      const archives = items.slice(1).map(({ id, title, date, pdf, lang }) => ({ id, title, date, pdf, lang }));
+      if (latest) return res.json({ latest, archives });
+    }
+    const defaults = {
+      ta: [{ id: 'ta-1', lang: 'ta', title: 'தமிழ் பதிப்பு', date: '2025-08-01', pdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
+      en: [{ id: 'en-1', lang: 'en', title: 'English Edition', date: '2025-08-01', pdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
+      kn: [{ id: 'kn-1', lang: 'kn', title: 'Kannada Edition', date: '2025-08-01', pdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
+      ml: [{ id: 'ml-1', lang: 'ml', title: 'Malayalam Edition', date: '2025-08-01', pdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
+      te: [{ id: 'te-1', lang: 'te', title: 'Telugu Edition', date: '2025-08-01', pdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
+    };
+    const arr = defaults[lang] || defaults.ta;
+    return res.json({ latest: arr[0], archives: [] });
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to load bulletins' });
+  }
+});
+
+app.get('/api/bulletins/admin', basicAuth, async (req, res) => {
+  try {
+    const col = await ensureBulletins();
+    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    const items = await col.find({}).sort({ date: -1, createdAt: -1 }).project({ _id: 0 }).toArray();
+    return res.json({ bulletins: items });
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to load bulletins' });
+  }
+});
+
+app.post('/api/bulletins', basicAuth, async (req, res) => {
+  try {
+    const { id, lang, title, pdf, date } = req.body || {};
+    const L = new Set(['ta','en','kn','ml','te']);
+    if (!L.has((lang||'').toLowerCase())) return res.status(400).json({ error: 'lang must be one of ta,en,kn,ml,te' });
+    if (!pdf || typeof pdf !== 'string') return res.status(400).json({ error: 'pdf is required' });
+    const col = await ensureBulletins();
+    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    const nid = id || `${lang}-${Date.now()}`;
+    const doc = { id: nid, lang: lang.toLowerCase(), title: title || '', pdf: pdf.trim(), date: date || new Date().toISOString().slice(0,10), createdAt: new Date().toISOString() };
+    await col.updateOne({ id: nid }, { $set: doc }, { upsert: true });
+    const saved = await col.findOne({ id: nid }, { projection: { _id: 0 } });
+    return res.status(201).json({ bulletin: saved });
+  } catch (e) {
+    if (e && e.code === 11000) return res.status(409).json({ error: 'Duplicate id' });
+    return res.status(500).json({ error: 'Failed to save bulletin' });
+  }
+});
+
+app.delete('/api/bulletins/:id', basicAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const col = await ensureBulletins();
+    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    const { deletedCount } = await col.deleteOne({ id });
+    if (!deletedCount) return res.status(404).json({ error: 'Not found' });
+    return res.status(204).end();
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to delete bulletin' });
+  }
+});
+
 // Upload API
 app.post('/api/upload', basicAuth, upload.single('file'), (req, res) => {
   try {
@@ -520,6 +605,25 @@ app.listen(PORT, () => {
             await pscol.insertMany(defaults, { ordered: true }).catch(() => {});
             const newCount = await pscol.countDocuments();
             console.log(`Power Stones seeded: ${newCount}`);
+          }
+        }
+        // Seed bulletins if empty
+        const bcol = await ensureBulletins();
+        if (bcol) {
+          const bcount = await bcol.countDocuments();
+          if (bcount === 0) {
+            const now = new Date();
+            const iso = (d)=> new Date(d).toISOString().slice(0,10);
+            const seeds = [
+              { id:'ta-1', lang:'ta', title:'தமிழ் பதிப்பு', pdf:'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', date: iso(now), createdAt: now.toISOString() },
+              { id:'en-1', lang:'en', title:'English Edition', pdf:'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', date: iso(now), createdAt: now.toISOString() },
+              { id:'kn-1', lang:'kn', title:'Kannada Edition', pdf:'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', date: iso(now), createdAt: now.toISOString() },
+              { id:'ml-1', lang:'ml', title:'Malayalam Edition', pdf:'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', date: iso(now), createdAt: now.toISOString() },
+              { id:'te-1', lang:'te', title:'Telugu Edition', pdf:'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', date: iso(now), createdAt: now.toISOString() },
+            ];
+            await bcol.insertMany(seeds, { ordered: true }).catch(() => {});
+            const newB = await bcol.countDocuments();
+            console.log(`Bulletins seeded: ${newB}`);
           }
         }
       }
