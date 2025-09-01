@@ -70,6 +70,23 @@
   </main>
 
   <script>
+    // Basic Auth helpers for protected endpoints
+    function getAuthHeader() {
+      const token = sessionStorage.getItem('adminAuth');
+      return token ? { 'Authorization': 'Basic ' + token } : {};
+    }
+    async function ensureAuthIfNeeded() {
+      if (sessionStorage.getItem('adminAuth')) return;
+      const probe = await fetch('/api/health/db');
+      if (probe.status === 401) {
+        const u = prompt('Admin username');
+        if (u === null) return;
+        const p = prompt('Admin password');
+        if (p === null) return;
+        sessionStorage.setItem('adminAuth', btoa(u + ':' + p));
+      }
+    }
+
     function projectRowHTML(p) {
       const type = p.type === 'flagship' ? 'existing' : p.type;
       const rowAccent = type === 'existing' ? 'border-gray-500' : 'border-primary-blue';
@@ -132,7 +149,13 @@
         e.stopPropagation();
         const id = e.currentTarget.getAttribute('data-id');
         if (!confirm('Delete this project?')) return;
-        await fetch(`/api/projects/${id}`, { method: 'DELETE' });
+        await ensureAuthIfNeeded();
+        const res = await fetch(`/api/projects/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
+        if (!res.ok) {
+          const t = await res.text();
+          alert('Delete failed: ' + t);
+          return;
+        }
         await refreshAdminList();
       }));
 
@@ -179,7 +202,8 @@
         if (!f) return;
         const fd = new FormData();
         fd.append('file', f);
-        const resp = await fetch('/api/upload', { method: 'POST', body: fd });
+        await ensureAuthIfNeeded();
+        const resp = await fetch('/api/upload', { method: 'POST', headers: { ...getAuthHeader() }, body: fd });
         const data = await resp.json();
         if (resp.ok && data.url) {
           imageInput.value = data.url;
@@ -205,10 +229,17 @@
           description: document.getElementById('pf-desc').value.trim()
         };
         const editId = form.getAttribute('data-edit-id');
+        await ensureAuthIfNeeded();
+        let res;
         if (editId) {
-          await fetch(`/api/projects/${editId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          res = await fetch(`/api/projects/${editId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
         } else {
-          await fetch('/api/projects', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+          res = await fetch('/api/projects', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
+        }
+        if (!res.ok) {
+          const t = await res.text();
+          alert('Save failed: ' + t);
+          return;
         }
         form.reset();
         form.removeAttribute('data-edit-id');
