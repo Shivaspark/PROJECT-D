@@ -67,7 +67,7 @@
   <script>
     function projectRowHTML(p) {
       return `
-        <div class="border border-gray-700 rounded p-3 flex flex-col md:flex-row md:items-center gap-3">
+        <div class="project-row border border-gray-700 rounded p-3 flex flex-col md:flex-row md:items-center gap-3 cursor-pointer hover:bg-dark-bg/40" data-id="${p.id}">
           <img src="${p.image}" alt="${p.title}" class="w-24 h-16 object-cover rounded border border-gray-600"/>
           <div class="flex-1">
             <div class="text-accent-blue font-semibold">${p.title}</div>
@@ -81,31 +81,59 @@
         </div>`
     }
 
+    function prefillForm(item) {
+      document.getElementById('pf-title').value = item.title;
+      document.getElementById('pf-type').value = item.type;
+      document.getElementById('pf-image').value = item.image;
+      document.getElementById('pf-desc').value = item.description;
+      document.getElementById('pf-submit').textContent = 'Update Project';
+      document.getElementById('project-form').setAttribute('data-edit-id', item.id);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
     async function refreshAdminList() {
       const list = document.getElementById('projects-list');
       const res = await fetch('/api/projects');
       const { projects } = await res.json();
       list.innerHTML = projects.map(projectRowHTML).join('');
+
+      // Delete
       list.querySelectorAll('.btn-delete').forEach(btn => btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
         const id = e.currentTarget.getAttribute('data-id');
         if (!confirm('Delete this project?')) return;
         await fetch(`/api/projects/${id}`, { method: 'DELETE' });
         await refreshAdminList();
       }));
+
+      // Edit button
       list.querySelectorAll('.btn-edit').forEach(btn => btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
         const id = e.currentTarget.getAttribute('data-id');
         const res = await fetch('/api/projects');
         const { projects } = await res.json();
         const item = projects.find(p => p.id === id);
         if (!item) return;
-        document.getElementById('pf-title').value = item.title;
-        document.getElementById('pf-type').value = item.type;
-        document.getElementById('pf-image').value = item.image;
-        document.getElementById('pf-desc').value = item.description;
-        document.getElementById('pf-submit').textContent = 'Update Project';
-        document.getElementById('project-form').setAttribute('data-edit-id', id);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        prefillForm(item);
+        highlightRow(id);
       }));
+
+      // Row click selection
+      list.querySelectorAll('.project-row').forEach(row => row.addEventListener('click', async (e) => {
+        const id = row.getAttribute('data-id');
+        const res = await fetch('/api/projects');
+        const { projects } = await res.json();
+        const item = projects.find(p => p.id === id);
+        if (!item) return;
+        prefillForm(item);
+        highlightRow(id);
+      }));
+
+      function highlightRow(id) {
+        list.querySelectorAll('.project-row').forEach(el => el.classList.remove('ring-2','ring-accent-blue'));
+        const active = list.querySelector(`.project-row[data-id="${id}"]`);
+        if (active) active.classList.add('ring-2','ring-accent-blue');
+      }
     }
 
     function attachAdminHandlers() {
