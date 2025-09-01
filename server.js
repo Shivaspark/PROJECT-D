@@ -212,6 +212,75 @@ app.get('/api/highlights', async (req, res) => {
   }
 });
 
+// Admin: list highlights with full data
+app.get('/api/highlights/admin', basicAuth, async (req, res) => {
+  try {
+    const col = await ensureHighlights();
+    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    const items = await col.find({}).sort({ order: 1, title: 1 }).project({ _id: 0, id: 1, src: 1, title: 1, order: 1 }).toArray();
+    return res.json({ highlights: items });
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to load highlights' });
+  }
+});
+
+// Admin: create a new highlight
+app.post('/api/highlights', basicAuth, async (req, res) => {
+  try {
+    const { id, src, title, order } = req.body || {};
+    if (!src || typeof src !== 'string' || !src.trim()) return res.status(400).json({ error: 'src is required' });
+    const col = await ensureHighlights();
+    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    const nextOrder = Number.isFinite(order) ? order : (await col.countDocuments());
+    const newId = id || `hl-${Date.now()}`;
+    await col.updateOne(
+      { id: newId },
+      { $set: { id: newId, src: src.trim(), title: title || '', order: nextOrder } },
+      { upsert: true }
+    );
+    const created = await col.findOne({ id: newId }, { projection: { _id: 0 } });
+    return res.status(201).json({ highlight: created });
+  } catch (e) {
+    if (e && e.code === 11000) return res.status(409).json({ error: 'Duplicate id' });
+    return res.status(500).json({ error: 'Failed to create highlight' });
+  }
+});
+
+// Admin: update highlight
+app.put('/api/highlights/:id', basicAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { src, title, order } = req.body || {};
+    const col = await ensureHighlights();
+    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    const exists = await col.findOne({ id });
+    if (!exists) return res.status(404).json({ error: 'Not found' });
+    const update = {};
+    if (typeof src === 'string') update.src = src.trim();
+    if (typeof title === 'string') update.title = title;
+    if (Number.isFinite(order)) update.order = order;
+    await col.updateOne({ id }, { $set: update });
+    const updated = await col.findOne({ id }, { projection: { _id: 0 } });
+    return res.json({ highlight: updated });
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to update highlight' });
+  }
+});
+
+// Admin: delete highlight
+app.delete('/api/highlights/:id', basicAuth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const col = await ensureHighlights();
+    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    const { deletedCount } = await col.deleteOne({ id });
+    if (!deletedCount) return res.status(404).json({ error: 'Not found' });
+    return res.status(204).end();
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to delete highlight' });
+  }
+});
+
 // Upload API
 app.post('/api/upload', basicAuth, upload.single('file'), (req, res) => {
   try {
