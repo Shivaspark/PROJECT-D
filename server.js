@@ -62,6 +62,7 @@ function writeDb(db) {
 let mongoClient = null;
 let mongoDb = null;
 let projectsCol = null;
+let highlightsCol = null;
 
 async function ensureMongo() {
   if (projectsCol) return projectsCol;
@@ -85,6 +86,21 @@ async function ensureMongo() {
     // ignore index creation errors (may already exist)
   }
   return projectsCol;
+}
+
+async function ensureHighlights() {
+  if (!mongoDb) {
+    const col = await ensureMongo();
+    if (!col) return null;
+  }
+  if (!highlightsCol) {
+    highlightsCol = mongoDb.collection('highlights');
+    try {
+      await highlightsCol.createIndex({ id: 1 }, { unique: true });
+      await highlightsCol.createIndex({ order: 1 });
+    } catch (e) {}
+  }
+  return highlightsCol;
 }
 
 async function dbGetProjects(type) {
@@ -175,6 +191,25 @@ app.get('/api/gallery', (req, res) => {
     const images = files.filter(f => allowed.has(path.extname(f).toLowerCase())).map(f => `assets/images/gallery/${f}`);
     res.json({ images });
   });
+});
+
+// Highlights API (Mongo-backed, with filesystem fallback)
+app.get('/api/highlights', async (req, res) => {
+  try {
+    const col = await ensureHighlights();
+    if (col) {
+      const docs = await col.find({}).sort({ order: 1, title: 1 }).project({ _id: 0, src: 1 }).toArray();
+      const images = docs.map(d => d.src).filter(Boolean);
+      if (images.length) return res.json({ images });
+    }
+    const galleryDir = path.join(__dirname, 'assets', 'images', 'gallery');
+    const allowed = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg']);
+    const files = fs.existsSync(galleryDir) ? fs.readdirSync(galleryDir) : [];
+    const images = files.filter(f => allowed.has(path.extname(f).toLowerCase())).map(f => `assets/images/gallery/${f}`);
+    return res.json({ images });
+  } catch (e) {
+    return res.status(500).json({ images: [], error: e.message });
+  }
 });
 
 // Upload API
@@ -305,6 +340,20 @@ app.listen(PORT, () => {
           }
           const newCount = await col.countDocuments();
           console.log(`Seeded ${newCount} projects into MongoDB`);
+        }
+        // Seed highlights if empty from filesystem gallery
+        const hcol = await ensureHighlights();
+        if (hcol) {
+          const hcount = await hcol.countDocuments();
+          if (hcount === 0) {
+            const galleryDir = path.join(__dirname, 'assets', 'images', 'gallery');
+            const allowed = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg']);
+            const files = fs.existsSync(galleryDir) ? fs.readdirSync(galleryDir) : [];
+            const images = files.filter(f => allowed.has(path.extname(f).toLowerCase())).map((f, i) => ({ id: `hl-${i}-${f}`, src: `assets/images/gallery/${f}`, title: f, order: i }));
+            if (images.length) await hcol.insertMany(images, { ordered: false }).catch(() => {});
+            const seeded = await hcol.countDocuments();
+            console.log(`Highlights seeded: ${seeded}`);
+          }
         }
       }
     } catch (e) {
