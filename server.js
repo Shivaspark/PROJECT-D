@@ -88,15 +88,16 @@ async function ensureMongo() {
 }
 
 async function dbGetProjects(type) {
+  const allowed = new Set(['flagship','upcoming','existing']);
   const col = await ensureMongo();
   if (col) {
-    const query = (type === 'flagship' || type === 'upcoming') ? { type } : {};
+    const query = allowed.has(type) ? { type } : {};
     const items = await col.find(query).sort({ title: 1 }).toArray();
     return items.map(({ id, type, title, description, image }) => ({ id, type, title, description, image }));
   } else {
     const db = readDb();
     let items = db.projects || [];
-    if (type === 'flagship' || type === 'upcoming') items = items.filter(p => p.type === type);
+    if (allowed.has(type)) items = items.filter(p => p.type === type);
     return items;
   }
 }
