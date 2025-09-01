@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
-const { MongoClient } = require('mongodb');
+const { MongoClient, ServerApiVersion } = require('mongodb');
 
 const app = express();
 const PORT = process.env.PORT || 8081;
@@ -42,7 +42,14 @@ async function ensureMongo() {
   if (projectsCol) return projectsCol;
   const uri = process.env.MONGODB_URI || (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('mongodb') ? process.env.DATABASE_URL : null);
   if (!uri) return null;
-  mongoClient = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 });
+  mongoClient = new MongoClient(uri, {
+    serverSelectionTimeoutMS: 5000,
+    serverApi: {
+      version: ServerApiVersion.v1,
+      strict: true,
+      deprecationErrors: true,
+    },
+  });
   await mongoClient.connect();
   const dbName = process.env.MONGODB_DB || 'rotaract';
   mongoDb = mongoClient.db(dbName);
