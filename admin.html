@@ -100,6 +100,46 @@
         <h2 class="text-xl font-bold text-accent-blue mb-4">Highlights</h2>
         <div id="highlights-list" class="space-y-3"></div>
       </div>
+
+      <div class="relative py-2">
+        <div class="border-t border-gray-700"></div>
+        <div class="absolute inset-0 -mt-3 flex justify-center">
+          <span class="px-3 text-gray-400 bg-dark-bg">Power Stones</span>
+        </div>
+      </div>
+
+      <form id="ps-form" class="bg-dark-secondary p-6 rounded-lg border border-gray-700">
+        <h2 class="text-xl font-bold text-accent-blue mb-4">Add / Update Power Stone</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-gray-300 text-sm mb-1">Slot (1–6)</label>
+            <select id="ps-slot" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+            </select>
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-gray-300 text-sm mb-1">Image URL</label>
+            <input id="ps-src" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="https://..." />
+          </div>
+          <div class="md:col-span-3">
+            <label class="block text-gray-300 text-sm mb-1">Title (optional)</label>
+            <input id="ps-title" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="Glory / Conquest / ..." />
+          </div>
+        </div>
+        <div class="mt-4 flex gap-3">
+          <button id="ps-submit" type="submit" class="bg-primary-blue text-white px-5 py-2 rounded-full hover:bg-accent-blue transition">Save</button>
+          <button id="ps-reset" type="button" class="bg-gray-700 text-white px-4 py-2 rounded-full hover:bg-gray-600 transition">Reset</button>
+        </div>
+      </form>
+      <div class="bg-dark-secondary p-6 rounded-lg border border-gray-700">
+        <h2 class="text-xl font-bold text-accent-blue mb-4">Current Power Stones</h2>
+        <div id="ps-list" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+      </div>
     </div>
   </main>
 
@@ -435,9 +475,80 @@
       img.src = '';
     }
 
+    // Power Stones admin UI
+    function psCardHTML(s) {
+      return `
+        <div class="border border-gray-700 rounded p-3 flex items-start gap-3">
+          <img src="${s.src}" alt="${s.title || ''}" class="w-24 h-16 object-cover rounded border border-gray-600 cursor-zoom-in" data-src="${s.src}" data-title="${s.title || ''}"/>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <div class="text-accent-blue font-semibold">Slot ${s.slot}</div>
+              <span class="text-xs text-gray-400 truncate">${s.title || ''}</span>
+            </div>
+            <div class="text-gray-500 text-xs mt-1 break-words">${s.src}</div>
+          </div>
+          <div class="flex gap-2">
+            <button data-src="${s.src}" data-title="${s.title || ''}" class="btn-ps-view bg-primary-blue text-white px-3 py-1 rounded-full">View</button>
+            <button data-id="${s.id}" class="btn-ps-delete bg-gray-700 text-white px-3 py-1 rounded-full">Delete</button>
+          </div>
+        </div>`
+    }
+    async function refreshPsList() {
+      const list = document.getElementById('ps-list');
+      await ensureAuthIfNeeded();
+      let res = await fetch('/api/power-stones/admin', { headers: { ...getAuthHeader() } });
+      if (res.status === 503) {
+        const pub = await fetch('/api/power-stones');
+        const { stones = [] } = await pub.json();
+        list.innerHTML = stones.map(psCardHTML).join('');
+        list.querySelectorAll('.btn-ps-delete').forEach(b => { b.disabled = true; b.classList.add('opacity-50','cursor-not-allowed'); b.title='Read-only mode'; });
+      } else if (res.ok) {
+        const { stones = [] } = await res.json();
+        list.innerHTML = stones.map(psCardHTML).join('');
+        list.querySelectorAll('.btn-ps-delete').forEach(btn => btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const id = e.currentTarget.getAttribute('data-id');
+          if (!confirm('Delete this poster?')) return;
+          await ensureAuthIfNeeded();
+          const r = await fetch(`/api/power-stones/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
+          if (!r.ok) { alert('Delete failed'); return; }
+          await refreshPsList();
+        }));
+      } else {
+        list.innerHTML = '<div class="text-sm text-red-400">Failed to load power stones</div>';
+      }
+      list.querySelectorAll('.btn-ps-view, #ps-list img').forEach(btn => btn.addEventListener('click', (e) => {
+        const el = e.currentTarget;
+        const src = el.getAttribute('data-src') || el.getAttribute('src');
+        const title = el.getAttribute('data-title') || '';
+        openHighlightViewer(src, title);
+      }));
+    }
+    function attachPsHandlers() {
+      const form = document.getElementById('ps-form');
+      const resetBtn = document.getElementById('ps-reset');
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+          slot: Number(document.getElementById('ps-slot').value),
+          src: document.getElementById('ps-src').value.trim(),
+          title: document.getElementById('ps-title').value.trim()
+        };
+        if (!payload.src || !Number.isInteger(payload.slot)) { alert('Slot and Image URL required'); return; }
+        await ensureAuthIfNeeded();
+        const res = await fetch('/api/power-stones', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
+        if (!res.ok) { const t = await res.text(); alert('Save failed: ' + t); return; }
+        form.reset();
+        await refreshPsList();
+      });
+      resetBtn.addEventListener('click', () => { form.reset(); });
+      refreshPsList();
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       attachAdminHandlers();
       attachHighlightHandlers();
+      attachPsHandlers();
       document.getElementById('hl-viewer-close').addEventListener('click', closeHighlightViewer);
       document.getElementById('hl-viewer').addEventListener('click', (e) => { if (e.target.id === 'hl-viewer') closeHighlightViewer(); });
     });
