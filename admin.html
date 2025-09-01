@@ -104,14 +104,11 @@
     }
     async function ensureAuthIfNeeded() {
       if (sessionStorage.getItem('adminAuth')) return;
-      const probe = await fetch('/api/health/db');
-      if (probe.status === 401) {
-        const u = prompt('Admin username');
-        if (u === null) return;
-        const p = prompt('Admin password');
-        if (p === null) return;
-        sessionStorage.setItem('adminAuth', btoa(u + ':' + p));
-      }
+      const u = prompt('Admin username');
+      if (u === null) return;
+      const p = prompt('Admin password');
+      if (p === null) return;
+      sessionStorage.setItem('adminAuth', btoa(u + ':' + p));
     }
 
     function projectRowHTML(p) {
