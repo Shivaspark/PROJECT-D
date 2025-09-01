@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const { MongoClient, ServerApiVersion } = require('mongodb');
+const multer = require('multer');
 
 require('dotenv').config();
 
@@ -9,6 +10,28 @@ const app = express();
 const PORT = process.env.PORT || 8081;
 
 app.use(express.json({ limit: '1mb' }));
+
+// Upload configuration
+const uploadDir = path.join(__dirname, 'assets', 'images', 'projects');
+fs.mkdirSync(uploadDir, { recursive: true });
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) { cb(null, uploadDir); },
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const base = path.basename(file.originalname, ext).replace(/[^a-z0-9\.-]/gi, '_');
+    cb(null, `${Date.now()}-${base}${ext}`);
+  }
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg']);
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (!allowed.has(ext)) return cb(new Error('Unsupported file type'));
+    cb(null, true);
+  }
+});
 
 function basicAuth(req, res, next) {
   const header = req.headers['authorization'] || '';
@@ -151,6 +174,17 @@ app.get('/api/gallery', (req, res) => {
     const images = files.filter(f => allowed.has(path.extname(f).toLowerCase())).map(f => `assets/images/gallery/${f}`);
     res.json({ images });
   });
+});
+
+// Upload API
+app.post('/api/upload', basicAuth, upload.single('file'), (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file' });
+    const url = ['assets', 'images', 'projects', req.file.filename].join('/');
+    return res.json({ url });
+  } catch (e) {
+    return res.status(500).json({ error: 'Upload failed' });
+  }
 });
 
 // DB Health
