@@ -1332,7 +1332,7 @@
             const track = document.getElementById('media-track');
             if (!viewport || !track) return;
 
-            fetch('/api/gallery')
+            fetch('/api/highlights')
                 .then(res => res.json())
                 .then(({ images }) => {
                     const defaultImages = [
