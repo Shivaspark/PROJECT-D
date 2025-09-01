@@ -571,14 +571,7 @@
                     <p class="text-gray-400 mt-2">Monthly Special Recognition by the President for Active Participation</p>
                     <div class="w-24 h-1 bg-primary-blue mx-auto mt-4"></div>
                 </div>
-                <div class="flex overflow-x-auto space-x-4 p-4 gallery-scroll">
-                    <div class="h-100 w-80 bg-dark-secondary p-2 rounded-lg"><img class="h-full w-full object-cover rounded-lg" src="https://placehold.co/600x400/eab308/ffffff?text=Glory" alt=""></div>
-                    <div class="flex-shrink-0 h-100 w-80 bg-dark-secondary p-2 rounded-lg"><img class="h-full w-full object-cover rounded-lg" src="https://placehold.co/600x400/22c55e/ffffff?text=Conquest" alt=""></div>
-                    <div class="flex-shrink-0 h-100 w-80 bg-dark-secondary p-2 rounded-lg"><img class="h-full w-full object-cover rounded-lg" src="https://placehold.co/600x400/8b5cf6/ffffff?text=Feast" alt=""></div>
-                    <div class="flex-shrink-0 h-100 w-80 bg-dark-secondary p-2 rounded-lg"><img class="h-full w-full object-cover rounded-lg" src="https://placehold.co/600x400/3b82f6/ffffff?text=Alliance" alt=""></div>
-                    <div class="flex-shrink-0 h-100 w-80 bg-dark-secondary p-2 rounded-lg"><img class="h-full w-full object-cover rounded-lg" src="https://placehold.co/600x400/ef4444/ffffff?text=Council" alt=""></div>
-                    <div class="flex-shrink-0 h-100 w-80 bg-dark-secondary p-2 rounded-lg"><img class="h-full w-full object-cover rounded-lg" src="https://placehold.co/600x400/14b8a6/ffffff?text=Valor" alt=""></div>
-                </div>
+                <div id="power-stones-track" class="flex overflow-x-auto space-x-4 p-4 gallery-scroll"></div>
             </div>
         </section>
         
@@ -1117,6 +1110,7 @@
             initializeProjectsCarousel();
             initializeAutoGallery();
             loadProjectsAndRender();
+            loadPowerStones();
         });
 
         // --- Know About Us Expand/Collapse Logic ---
@@ -1434,6 +1428,34 @@
                     viewport.addEventListener('pointerup', start);
                     start();
                 });
+        }
+
+        async function loadPowerStones() {
+            try {
+                const res = await fetch('/api/power-stones');
+                const { stones = [] } = await res.json();
+                const track = document.getElementById('power-stones-track');
+                if (!track) return;
+                track.innerHTML = '';
+                stones.sort((a,b)=>a.slot-b.slot).forEach(s => {
+                    const wrap = document.createElement('div');
+                    wrap.className = 'flex-shrink-0 h-100 w-80 bg-dark-secondary p-2 rounded-lg';
+                    wrap.innerHTML = `<img class="h-full w-full object-cover rounded-lg" src="${s.src}" alt="${s.title || ''}">`;
+                    track.appendChild(wrap);
+                });
+            } catch (e) {
+                const fallback = [
+                    { src: 'https://placehold.co/600x400/eab308/ffffff?text=Glory' },
+                    { src: 'https://placehold.co/600x400/22c55e/ffffff?text=Conquest' },
+                    { src: 'https://placehold.co/600x400/8b5cf6/ffffff?text=Feast' },
+                    { src: 'https://placehold.co/600x400/3b82f6/ffffff?text=Alliance' },
+                    { src: 'https://placehold.co/600x400/ef4444/ffffff?text=Council' },
+                    { src: 'https://placehold.co/600x400/14b8a6/ffffff?text=Valor' },
+                ];
+                const track = document.getElementById('power-stones-track');
+                if (!track) return;
+                track.innerHTML = fallback.map(s => `<div class="flex-shrink-0 h-100 w-80 bg-dark-secondary p-2 rounded-lg"><img class=\"h-full w-full object-cover rounded-lg\" src=\"${s.src}\" alt=\"\"></div>`).join('');
+            }
         }
 
         const congratsModal = document.getElementById('congrats-modal');
