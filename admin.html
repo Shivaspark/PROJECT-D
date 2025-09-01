@@ -71,11 +71,15 @@
 
   <script>
     function projectRowHTML(p) {
+      const rowAccent = p.type === 'flagship' ? 'border-accent-blue' : 'border-primary-blue';
+      const badge = p.type === 'flagship'
+        ? '<span class="ml-2 text-[10px] uppercase tracking-wide bg-accent-blue/20 text-accent-blue border border-accent-blue px-2 py-0.5 rounded-full">Flagship</span>'
+        : '<span class="ml-2 text-[10px] uppercase tracking-wide bg-primary-blue/20 text-primary-blue border border-primary-blue px-2 py-0.5 rounded-full">Upcoming</span>';
       return `
-        <div class="project-row border border-gray-700 rounded p-3 flex flex-col md:flex-row md:items-start gap-3 cursor-pointer hover:bg-dark-bg/40" data-id="${p.id}">
+        <div class="project-row border-l-4 ${rowAccent} border border-gray-700 rounded p-3 flex flex-col md:flex-row md:items-start gap-3 cursor-pointer hover:bg-dark-bg/40" data-id="${p.id}">
           <img src="${p.image}" alt="${p.title}" class="w-24 h-16 object-cover rounded border border-gray-600"/>
           <div class="flex-1 min-w-0">
-            <div class="text-accent-blue font-semibold">${p.title}</div>
+            <div class="flex items-center gap-2"><div class="text-accent-blue font-semibold truncate">${p.title}</div>${badge}</div>
             <div class="text-gray-400 text-sm break-words whitespace-normal overflow-hidden">${p.description}</div>
             <div class="text-gray-500 text-xs mt-1">Type: ${p.type} • ID: ${p.id}</div>
           </div>
@@ -103,11 +107,24 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    function sectionHTML(title, items) {
+      return `
+        <div class="space-y-3">
+          <h3 class="text-sm font-semibold uppercase tracking-wide text-gray-400">${title}</h3>
+          ${items.map(projectRowHTML).join('')}
+        </div>`;
+    }
+
     async function refreshAdminList() {
       const list = document.getElementById('projects-list');
       const res = await fetch('/api/projects');
       const { projects } = await res.json();
-      list.innerHTML = projects.map(projectRowHTML).join('');
+      const flagships = projects.filter(p => p.type === 'flagship');
+      const upcoming = projects.filter(p => p.type === 'upcoming');
+      list.innerHTML = [
+        flagships.length ? sectionHTML('Flagship Projects', flagships) : '',
+        upcoming.length ? sectionHTML('Upcoming Projects', upcoming) : ''
+      ].join('');
 
       // Delete
       list.querySelectorAll('.btn-delete').forEach(btn => btn.addEventListener('click', async (e) => {
@@ -131,7 +148,7 @@
       }));
 
       // Row click selection
-      list.querySelectorAll('.project-row').forEach(row => row.addEventListener('click', async (e) => {
+      list.querySelectorAll('.project-row').forEach(row => row.addEventListener('click', async () => {
         const id = row.getAttribute('data-id');
         const res = await fetch('/api/projects');
         const { projects } = await res.json();
