@@ -310,7 +310,7 @@
         <section id="projects" class="py-20 bg-dark-secondary">
             <div class="container mx-auto px-6">
                 <div class="text-center mb-12">
-                    <h2 class="text-3xl md:text-4xl font-black text-white">Existing Projects 2025 - 2026</h2>
+                    <h2 class="text-3xl md:text-4xl font-black text-white">Our Flagships Projects 2025 - 2026</h2>
                     <p class="text-gray-400 mt-2">Forging a lasting legacy in our realm.</p>
                     <div class="w-24 h-1 bg-primary-blue mx-auto mt-4"></div>
                 </div>
@@ -1229,16 +1229,18 @@
             try {
                 const res = await fetch('/api/projects');
                 const { projects } = await res.json();
-                const existing = projects.filter(p => p.type === 'existing' || p.type === 'flagship');
+                const flagship = projects.filter(p => p.type === 'flagship');
+                const existing = projects.filter(p => p.type === 'existing');
                 const upcoming = projects.filter(p => p.type === 'upcoming');
 
                 const projTrack = document.getElementById('projects-track');
                 const upTrack = document.getElementById('upcoming-track');
-                if (projTrack) {
-                    projTrack.innerHTML = existing.map(projectCardHTML).join('');
+                if (projTrack && flagship.length) {
+                    projTrack.innerHTML = flagship.map(projectCardHTML).join('');
                 }
                 if (upTrack) {
                     upTrack.innerHTML = [
+                        ...existing.map(projectCardHTML),
                         separatorCardHTML(),
                         ...upcoming.map(projectCardHTML)
                     ].join('');
