@@ -302,7 +302,24 @@
     async function refreshHighlightsList() {
       const list = document.getElementById('highlights-list');
       await ensureAuthIfNeeded();
-      const res = await fetch('/api/highlights/admin', { headers: { ...getAuthHeader() } });
+      let res = await fetch('/api/highlights/admin', { headers: { ...getAuthHeader() } });
+      if (res.status === 401) {
+        sessionStorage.removeItem('adminAuth');
+        await ensureAuthIfNeeded();
+        res = await fetch('/api/highlights/admin', { headers: { ...getAuthHeader() } });
+      }
+      if (res.status === 503) {
+        const pub = await fetch('/api/highlights');
+        if (!pub.ok) {
+          list.innerHTML = '<div class="text-sm text-red-400">Failed to load highlights</div>';
+          return;
+        }
+        const { images = [] } = await pub.json();
+        const items = images.map((src, i) => ({ id: `fs-${i}`, src, title: '', order: i }));
+        list.innerHTML = '<div class="text-xs text-yellow-400 mb-2">Database not connected; showing read-only highlights.</div>' + items.map(highlightItemRowHTML).join('');
+        list.querySelectorAll('.btn-hl-edit, .btn-hl-delete').forEach(el => el.remove());
+        return;
+      }
       if (!res.ok) {
         list.innerHTML = '<div class="text-sm text-red-400">Failed to load highlights</div>';
         return;
@@ -328,7 +345,13 @@
 
       // Edit
       async function prefillHighlight(id) {
-        const res = await fetch('/api/highlights/admin', { headers: { ...getAuthHeader() } });
+        let res = await fetch('/api/highlights/admin', { headers: { ...getAuthHeader() } });
+        if (res.status === 401) {
+          sessionStorage.removeItem('adminAuth');
+          await ensureAuthIfNeeded();
+          res = await fetch('/api/highlights/admin', { headers: { ...getAuthHeader() } });
+        }
+        if (!res.ok) return;
         const { highlights } = await res.json();
         const item = (highlights || []).find(h => h.id === id);
         if (!item) return;
