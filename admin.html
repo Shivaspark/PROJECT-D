@@ -40,6 +40,7 @@
             <label class="block text-gray-300 text-sm mb-1">Type</label>
             <select id="pf-type" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200">
               <option value="flagship">Flagship</option>
+              <option value="existing">Existing</option>
               <option value="upcoming">Upcoming</option>
             </select>
           </div>
@@ -71,10 +72,12 @@
 
   <script>
     function projectRowHTML(p) {
-      const rowAccent = p.type === 'flagship' ? 'border-accent-blue' : 'border-primary-blue';
+      const rowAccent = p.type === 'flagship' ? 'border-accent-blue' : (p.type === 'existing' ? 'border-gray-500' : 'border-primary-blue');
       const badge = p.type === 'flagship'
         ? '<span class="ml-2 text-[10px] uppercase tracking-wide bg-accent-blue/20 text-accent-blue border border-accent-blue px-2 py-0.5 rounded-full">Flagship</span>'
-        : '<span class="ml-2 text-[10px] uppercase tracking-wide bg-primary-blue/20 text-primary-blue border border-primary-blue px-2 py-0.5 rounded-full">Upcoming</span>';
+        : (p.type === 'existing'
+          ? '<span class="ml-2 text-[10px] uppercase tracking-wide bg-gray-600/20 text-gray-300 border border-gray-500 px-2 py-0.5 rounded-full">Existing</span>'
+          : '<span class="ml-2 text-[10px] uppercase tracking-wide bg-primary-blue/20 text-primary-blue border border-primary-blue px-2 py-0.5 rounded-full">Upcoming</span>');
       return `
         <div class="project-row border-l-4 ${rowAccent} border border-gray-700 rounded p-3 flex flex-col md:flex-row md:items-start gap-3 cursor-pointer hover:bg-dark-bg/40" data-id="${p.id}">
           <img src="${p.image}" alt="${p.title}" class="w-24 h-16 object-cover rounded border border-gray-600"/>
@@ -120,9 +123,11 @@
       const res = await fetch('/api/projects');
       const { projects } = await res.json();
       const flagships = projects.filter(p => p.type === 'flagship');
+      const existing = projects.filter(p => p.type === 'existing');
       const upcoming = projects.filter(p => p.type === 'upcoming');
       list.innerHTML = [
         flagships.length ? sectionHTML('Flagship Projects', flagships) : '',
+        existing.length ? sectionHTML('Existing Projects', existing) : '',
         upcoming.length ? sectionHTML('Upcoming Projects', upcoming) : ''
       ].join('');
 
