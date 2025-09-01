@@ -585,19 +585,21 @@
                 </div>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div class="lg:col-span-2 bg-dark-secondary p-6 rounded-lg border border-gray-700">
-                        <img src="https://placehold.co/800x400/005daa/ffffff?text=Latest+News" alt="Latest Bulletin" class="rounded-lg mb-4 w-full">
-                        <h3 class="text-2xl font-bold text-accent-blue mb-2">August 2025 Edition</h3>
-                        <p class="text-gray-400 mb-4">This month, our clan embarked on the 'Quest for Knowledge,' delivering scrolls and supplies to young learners. Read about our journey, the challenges we faced, and the alliances we forged along the way. Our tale of service continues!</p>
-                        <a href="#" class="font-semibold text-accent-blue hover:text-white">Read the Full Scroll &rarr;</a>
+                        <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                            <h3 id="bulletin-title" class="text-2xl font-bold text-accent-blue">Latest Bulletin</h3>
+                            <div class="flex flex-wrap gap-2" id="bulletin-lang-tabs"></div>
+                        </div>
+                        <div class="rounded-lg overflow-hidden border border-gray-700">
+                            <iframe id="bulletin-viewer" src="" class="w-full h-[70vh] bg-dark-bg" title="Bulletin PDF" loading="lazy"></iframe>
+                        </div>
+                        <div class="mt-3 flex items-center justify-between">
+                            <a id="bulletin-open" href="#" target="_blank" class="font-semibold text-primary-blue hover:text-accent-blue">Open Full Bulletin &rarr;</a>
+                            <span id="bulletin-date" class="text-xs text-gray-400"></span>
+                        </div>
                     </div>
                     <div class="bg-dark-secondary p-6 rounded-lg border border-gray-700">
                         <h3 class="text-2xl font-bold text-accent-blue mb-4">Archives</h3>
-                        <ul class="space-y-3">
-                            <li><a href="#" class="text-gray-300 hover:text-accent-blue border-b border-gray-600 pb-2 block">July 2025: The Cleansing Flame</a></li>
-                            <li><a href="#" class="text-gray-300 hover:text-accent-blue border-b border-gray-600 pb-2 block">June 2025: Forging New Bonds</a></li>
-                            <li><a href="#" class="text-gray-300 hover:text-accent-blue border-b border-gray-600 pb-2 block">May 2025: A Call to Arms</a></li>
-                            <li><a href="#" class="text-gray-300 hover:text-accent-blue pb-2 block">April 2025: The First Flight</a></li>
-                        </ul>
+                        <ul id="bulletin-archives" class="space-y-3"></ul>
                     </div>
                 </div>
             </div>
@@ -1111,6 +1113,7 @@
             initializeAutoGallery();
             loadProjectsAndRender();
             loadPowerStones();
+            setupBulletins();
         });
 
         // --- Know About Us Expand/Collapse Logic ---
@@ -1456,6 +1459,52 @@
                 if (!track) return;
                 track.innerHTML = fallback.map(s => `<div class="flex-shrink-0 w-80 aspect-[4/5] bg-dark-secondary p-2 rounded-lg overflow-hidden"><img class=\"w-full h-full object-cover rounded-lg\" src=\"${s.src}\" alt=\"\"></div>`).join('');
             }
+        }
+
+        function setupBulletins() {
+            const tabs = document.getElementById('bulletin-lang-tabs');
+            const langs = [
+                { code: 'ta', label: 'Tamil' },
+                { code: 'en', label: 'English' },
+                { code: 'kn', label: 'Kannada' },
+                { code: 'ml', label: 'Malayalam' },
+                { code: 'te', label: 'Telugu' }
+            ];
+            let active = 'ta';
+            function renderTabs() {
+                tabs.innerHTML = '';
+                langs.forEach(l => {
+                    const btn = document.createElement('button');
+                    btn.className = 'px-3 py-1 rounded-full border ' + (l.code===active ? 'bg-primary-blue text-white border-primary-blue' : 'bg-dark-bg text-gray-300 border-gray-600 hover:border-primary-blue');
+                    btn.textContent = l.label;
+                    btn.addEventListener('click', () => { active = l.code; loadBulletin(active); renderTabs(); });
+                    tabs.appendChild(btn);
+                });
+            }
+            async function loadBulletin(lang) {
+                try {
+                    const res = await fetch(`/api/bulletins?lang=${encodeURIComponent(lang)}`);
+                    if (!res.ok) throw new Error('Failed');
+                    const { latest, archives } = await res.json();
+                    const viewer = document.getElementById('bulletin-viewer');
+                    const title = document.getElementById('bulletin-title');
+                    const open = document.getElementById('bulletin-open');
+                    const dateEl = document.getElementById('bulletin-date');
+                    const list = document.getElementById('bulletin-archives');
+                    const url = latest && latest.pdf ? `${latest.pdf}#page=1&zoom=page-width` : '';
+                    viewer.src = url;
+                    title.textContent = (latest && latest.title) ? latest.title : 'Latest Bulletin';
+                    open.href = latest && latest.pdf ? latest.pdf : '#';
+                    dateEl.textContent = latest && latest.date ? new Date(latest.date).toDateString() : '';
+                    list.innerHTML = (archives || []).map(a => `<li><a href="${a.pdf}" target="_blank" class="text-gray-300 hover:text-accent-blue border-b border-gray-600 pb-2 block">${new Date(a.date).toLocaleDateString()} — ${a.title || 'Bulletin'}</a></li>`).join('');
+                } catch (e) {
+                    const viewer = document.getElementById('bulletin-viewer');
+                    viewer.src = 'about:blank';
+                    document.getElementById('bulletin-archives').innerHTML = '<li class="text-sm text-red-400">Failed to load bulletins</li>';
+                }
+            }
+            renderTabs();
+            loadBulletin(active);
         }
 
         const congratsModal = document.getElementById('congrats-modal');
