@@ -586,7 +586,7 @@
         <section id="bulletin" class="py-20 bg-dark-bg">
             <div class="container mx-auto px-6">
                 <div class="text-center mb-12">
-                    <h2 class="text-3xl md:text-4xl font-black text-white">மாற்��த்தின் முத்திரை - THE SEAL OF CHANGE</h2>
+                    <h2 class="text-3xl md:text-4xl font-black text-white">மாற�����த்தின் முத்திரை - THE SEAL OF CHANGE</h2>
                     <p class="text-gray-400 mt-2">News and tales from our clan in 5 languages</p>
                     <div class="w-24 h-1 bg-primary-blue mx-auto mt-4"></div>
                 </div>
@@ -1230,16 +1230,17 @@
                 const res = await fetch('/api/projects');
                 const { projects } = await res.json();
                 const flagship = projects.filter(p => p.type === 'flagship');
+                const existing = projects.filter(p => p.type === 'existing');
                 const upcoming = projects.filter(p => p.type === 'upcoming');
 
                 const projTrack = document.getElementById('projects-track');
                 const upTrack = document.getElementById('upcoming-track');
                 if (projTrack) {
-                    projTrack.innerHTML = flagship.map(projectCardHTML).join('');
+                    const combined = [...flagship, ...existing];
+                    projTrack.innerHTML = combined.map(projectCardHTML).join('');
                 }
                 if (upTrack) {
                     upTrack.innerHTML = [
-                        ...flagship.map(projectCardHTML),
                         separatorCardHTML(),
                         ...upcoming.map(projectCardHTML)
                     ].join('');
