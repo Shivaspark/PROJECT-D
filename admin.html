@@ -67,8 +67,15 @@
         <div id="projects-list" class="space-y-3"></div>
       </div>
 
+      <div class="relative py-2">
+        <div class="border-t border-gray-700"></div>
+        <div class="absolute inset-0 -mt-3 flex justify-center">
+          <span class="px-3 text-gray-400 bg-dark-bg">Highlights</span>
+        </div>
+      </div>
+
       <form id="highlight-form" class="bg-dark-secondary p-6 rounded-lg border border-gray-700">
-        <h2 class="text-xl font-bold text-accent-blue mb-4">Add / Edit Highlight</h2>
+        <h2 class="text-xl font-bold text-accent-blue mb-4">Add Highlight</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="md:col-span-2">
             <label class="block text-gray-300 text-sm mb-1">Image URL</label>
@@ -276,7 +283,7 @@
     // Highlights admin UI
     function highlightItemRowHTML(h) {
       return `
-        <div class="hl-row border-l-4 border-primary-blue border border-gray-700 rounded p-3 flex items-start gap-3 cursor-pointer hover:bg-dark-bg/40" data-id="${h.id}">
+        <div class="hl-row border-l-4 border-primary-blue border border-gray-700 rounded p-3 flex items-start gap-3 hover:bg-dark-bg/40" data-id="${h.id}">
           <img src="${h.src}" alt="${h.title || 'Highlight'}" class="w-24 h-16 object-cover rounded border border-gray-600"/>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
@@ -286,7 +293,6 @@
             <div class="text-gray-500 text-xs mt-1 break-words">${h.src}</div>
           </div>
           <div class="flex gap-2">
-            <button data-id="${h.id}" class="btn-hl-edit bg-primary-blue text-white px-3 py-1 rounded-full">Edit</button>
             <button data-id="${h.id}" class="btn-hl-delete bg-gray-700 text-white px-3 py-1 rounded-full">Delete</button>
           </div>
         </div>`
@@ -317,7 +323,6 @@
         const { images = [] } = await pub.json();
         const items = images.map((src, i) => ({ id: `fs-${i}`, src, title: '', order: i }));
         list.innerHTML = '<div class="text-xs text-yellow-400 mb-2">Database not connected; showing read-only highlights.</div>' + items.map(highlightItemRowHTML).join('');
-        list.querySelectorAll('.btn-hl-edit, .btn-hl-delete').forEach(el => el.remove());
         return;
       }
       if (!res.ok) {
@@ -328,7 +333,7 @@
       const items = Array.isArray(highlights) ? highlights : [];
       list.innerHTML = items.map(highlightItemRowHTML).join('');
 
-      // Delete
+      // Delete only
       list.querySelectorAll('.btn-hl-delete').forEach(btn => btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         const id = e.currentTarget.getAttribute('data-id');
@@ -343,40 +348,10 @@
         await refreshHighlightsList();
       }));
 
-      // Edit
-      async function prefillHighlight(id) {
-        let res = await fetch('/api/highlights/admin', { headers: { ...getAuthHeader() } });
-        if (res.status === 401) {
-          sessionStorage.removeItem('adminAuth');
-          await ensureAuthIfNeeded();
-          res = await fetch('/api/highlights/admin', { headers: { ...getAuthHeader() } });
-        }
-        if (!res.ok) return;
-        const { highlights } = await res.json();
-        const item = (highlights || []).find(h => h.id === id);
-        if (!item) return;
-        const form = document.getElementById('highlight-form');
-        document.getElementById('hf-src').value = item.src || '';
-        setHighlightPreview(item.src || '');
-        document.getElementById('hf-title').value = item.title || '';
-        document.getElementById('hf-order').value = Number(item.order ?? 0);
-        form.setAttribute('data-edit-id', item.id);
-        document.getElementById('hf-submit').textContent = 'Update Highlight';
-        document.getElementById('hf-src').focus();
-        document.getElementById('highlights-list').querySelectorAll('.hl-row').forEach(el => el.classList.remove('ring-2','ring-accent-blue'));
-        const active = document.querySelector(`.hl-row[data-id="${id}"]`);
-        if (active) active.classList.add('ring-2','ring-accent-blue');
-      }
-
-      list.querySelectorAll('.btn-hl-edit').forEach(btn => btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const id = e.currentTarget.getAttribute('data-id');
-        await prefillHighlight(id);
-      }));
-
-      list.querySelectorAll('.hl-row').forEach(row => row.addEventListener('click', async () => {
-        const id = row.getAttribute('data-id');
-        await prefillHighlight(id);
+      // Row click: emphasize selection (view only)
+      list.querySelectorAll('.hl-row').forEach(row => row.addEventListener('click', () => {
+        list.querySelectorAll('.hl-row').forEach(el => el.classList.remove('ring-2','ring-accent-blue'));
+        row.classList.add('ring-2','ring-accent-blue');
       }));
     }
 
@@ -406,20 +381,13 @@
         if (!payload.src) { alert('Image URL is required'); return; }
         if (!Number.isFinite(payload.order)) delete payload.order;
         await ensureAuthIfNeeded();
-        const editId = form.getAttribute('data-edit-id');
-        let res;
-        if (editId) {
-          res = await fetch(`/api/highlights/${editId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
-        } else {
-          res = await fetch('/api/highlights', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
-        }
+        const res = await fetch('/api/highlights', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
         if (!res.ok) {
           const t = await res.text();
           alert('Save failed: ' + t);
           return;
         }
         form.reset();
-        form.removeAttribute('data-edit-id');
         setHighlightPreview('');
         document.getElementById('hf-submit').textContent = 'Add Highlight';
         await refreshHighlightsList();
