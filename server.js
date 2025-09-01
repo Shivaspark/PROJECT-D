@@ -3,6 +3,8 @@ const path = require('path');
 const fs = require('fs');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
+require('dotenv').config();
+
 const app = express();
 const PORT = process.env.PORT || 8081;
 
