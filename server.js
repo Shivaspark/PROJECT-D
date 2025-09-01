@@ -214,23 +214,36 @@ app.delete('/api/projects/:id', basicAuth, async (req, res) => {
 });
 
 // Import projects from local JSON into the active provider (MongoDB if configured)
+async function importFromLocalToActiveProvider() {
+  const source = readDb();
+  const items = Array.isArray(source.projects) ? source.projects : [];
+  const col = await ensureMongo();
+  if (col) {
+    let upserts = 0;
+    for (const p of items) {
+      const { id, type, title, description, image } = p;
+      const r = await col.updateOne({ id }, { $set: { id, type, title, description, image } }, { upsert: true });
+      if (r.upsertedCount || r.matchedCount) upserts++;
+    }
+    const count = await col.countDocuments();
+    return { imported: upserts, provider: 'mongodb', total: count };
+  }
+  return { imported: 0, provider: 'json', total: (items || []).length };
+}
+
 app.post('/api/projects/import', basicAuth, async (req, res) => {
   try {
-    const source = readDb();
-    const items = Array.isArray(source.projects) ? source.projects : [];
-    const col = await ensureMongo();
-    if (col) {
-      let upserts = 0;
-      for (const p of items) {
-        const { id, type, title, description, image } = p;
-        const r = await col.updateOne({ id }, { $set: { id, type, title, description, image } }, { upsert: true });
-        if (r.upsertedCount || r.matchedCount) upserts++;
-      }
-      const count = await col.countDocuments();
-      return res.json({ imported: upserts, provider: 'mongodb', total: count });
-    }
-    // If MongoDB is not configured, projects already live in the JSON file
-    return res.json({ imported: 0, provider: 'json', total: (items || []).length });
+    const result = await importFromLocalToActiveProvider();
+    return res.json(result);
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to import', message: e.message });
+  }
+});
+
+app.get('/api/projects/import', basicAuth, async (req, res) => {
+  try {
+    const result = await importFromLocalToActiveProvider();
+    return res.json(result);
   } catch (e) {
     return res.status(500).json({ error: 'Failed to import', message: e.message });
   }
