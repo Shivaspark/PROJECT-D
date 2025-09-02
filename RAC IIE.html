@@ -1232,12 +1232,12 @@
 
                 const projTrack = document.getElementById('projects-track');
                 const upTrack = document.getElementById('upcoming-track');
-                if (projTrack && flagship.length) {
-                    projTrack.innerHTML = flagship.map(projectCardHTML).join('');
+                if (projTrack) {
+                    const featured = [...existing, ...flagship];
+                    projTrack.innerHTML = featured.map(projectCardHTML).join('');
                 }
                 if (upTrack) {
                     upTrack.innerHTML = [
-                        ...existing.map(projectCardHTML),
                         separatorCardHTML(),
                         ...upcoming.map(projectCardHTML)
                     ].join('');
