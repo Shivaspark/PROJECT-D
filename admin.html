@@ -140,6 +140,50 @@
         <h2 class="text-xl font-bold text-accent-blue mb-4">Current Power Stones</h2>
         <div id="ps-list" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
       </div>
+
+      <div class="relative py-2">
+        <div class="border-t border-gray-700"></div>
+        <div class="absolute inset-0 -mt-3 flex justify-center">
+          <span class="px-3 text-gray-400 bg-dark-bg">Documents</span>
+        </div>
+      </div>
+
+      <form id="bulletin-form" class="bg-dark-secondary p-6 rounded-lg border border-gray-700">
+        <h2 class="text-xl font-bold text-accent-blue mb-4">Add Document (Bulletin)</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label class="block text-gray-300 text-sm mb-1">Language</label>
+            <select id="bf-lang" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200">
+              <option value="ta">Tamil (ta)</option>
+              <option value="en">English (en)</option>
+              <option value="kn">Kannada (kn)</option>
+              <option value="ml">Malayalam (ml)</option>
+              <option value="te">Telugu (te)</option>
+            </select>
+          </div>
+          <div class="md:col-span-2">
+            <label class="block text-gray-300 text-sm mb-1">Title</label>
+            <input id="bf-title" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="Monthly Bulletin title" />
+          </div>
+          <div>
+            <label class="block text-gray-300 text-sm mb-1">Date</label>
+            <input id="bf-date" type="date" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" />
+          </div>
+          <div class="md:col-span-4">
+            <label class="block text-gray-300 text-sm mb-1">PDF URL</label>
+            <input id="bf-pdf" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="https://.../file.pdf" />
+            <p class="text-xs text-gray-500 mt-1">Paste a public PDF link. Hosting files is not handled here.</p>
+          </div>
+        </div>
+        <div class="mt-4 flex gap-3">
+          <button id="bf-submit" type="submit" class="bg-primary-blue text-white px-5 py-2 rounded-full hover:bg-accent-blue transition">Save Document</button>
+          <button id="bf-reset" type="button" class="bg-gray-700 text-white px-4 py-2 rounded-full hover:bg-gray-600 transition">Reset</button>
+        </div>
+      </form>
+      <div class="bg-dark-secondary p-6 rounded-lg border border-gray-700">
+        <h2 class="text-xl font-bold text-accent-blue mb-4">All Documents</h2>
+        <div id="bulletins-list" class="space-y-3"></div>
+      </div>
     </div>
   </main>
 
@@ -364,7 +408,6 @@
         const { images = [] } = await pub.json();
         const items = images.map((src, i) => ({ id: `fs-${i}`, src, title: '', order: i }));
         list.innerHTML = '<div class="text-xs text-yellow-400 mb-2">Database not connected; showing read-only highlights.</div>' + items.map(highlightItemRowHTML).join('');
-        // enable view, disable delete in fallback
         list.querySelectorAll('.btn-hl-view, .hl-thumb').forEach(btn => btn.addEventListener('click', (e) => {
           const el = e.currentTarget;
           const src = el.getAttribute('data-src') || el.getAttribute('src');
@@ -386,7 +429,6 @@
       const items = Array.isArray(highlights) ? highlights : [];
       list.innerHTML = items.map(highlightItemRowHTML).join('');
 
-      // View handlers
       list.querySelectorAll('.btn-hl-view, .hl-thumb').forEach(btn => btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const el = e.currentTarget;
@@ -395,7 +437,6 @@
         openHighlightViewer(src, title);
       }));
 
-      // Delete only
       list.querySelectorAll('.btn-hl-delete').forEach(btn => btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         const id = e.currentTarget.getAttribute('data-id');
@@ -410,7 +451,6 @@
         await refreshHighlightsList();
       }));
 
-      // Row click: emphasize selection (view only)
       list.querySelectorAll('.hl-row').forEach(row => row.addEventListener('click', () => {
         list.querySelectorAll('.hl-row').forEach(el => el.classList.remove('ring-2','ring-accent-blue'));
         row.classList.add('ring-2','ring-accent-blue');
@@ -547,10 +587,101 @@
       refreshPsList();
     }
 
+    // Bulletins (Documents) admin UI
+    function bulletinRowHTML(b) {
+      return `
+        <div class="bulletin-row border-l-4 border-primary-blue border border-gray-700 rounded p-3 flex flex-col md:flex-row md:items-start gap-3 hover:bg-dark-bg/40" data-id="${b.id}">
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2">
+              <div class="text-accent-blue font-semibold truncate">${b.title || b.pdf}</div>
+              <span class="ml-2 text-[10px] uppercase tracking-wide bg-primary-blue/20 text-primary-blue border border-primary-blue px-2 py-0.5 rounded-full">${b.lang.toUpperCase()}</span>
+              <span class="ml-2 text-[10px] uppercase tracking-wide bg-gray-600/20 text-gray-300 border border-gray-500 px-2 py-0.5 rounded-full">${b.date}</span>
+            </div>
+            <div class="text-gray-500 text-xs mt-1 break-words">${b.pdf}</div>
+          </div>
+          <div class="flex gap-2">
+            <a href="${b.pdf}" target="_blank" rel="noopener" class="bg-primary-blue text-white px-3 py-1 rounded-full text-center">Open</a>
+            <button data-id="${b.id}" class="btn-bul-delete bg-gray-700 text-white px-3 py-1 rounded-full">Delete</button>
+          </div>
+        </div>`
+    }
+
+    async function refreshBulletinsList() {
+      const list = document.getElementById('bulletins-list');
+      await ensureAuthIfNeeded();
+      let res = await fetch('/api/bulletins/admin', { headers: { ...getAuthHeader() } });
+      if (res.status === 503) {
+        const langs = ['ta','en','kn','ml','te'];
+        const collected = [];
+        for (const l of langs) {
+          const r = await fetch(`/api/bulletins?lang=${l}`);
+          if (r.ok) {
+            const { latest } = await r.json();
+            if (latest) collected.push(latest);
+          }
+        }
+        if (!collected.length) {
+          list.innerHTML = '<div class="text-sm text-yellow-400">Database not connected and no default bulletins available.</div>';
+          return;
+        }
+        list.innerHTML = '<div class="text-xs text-yellow-400 mb-2">Database not connected; showing read-only latest documents.</div>' + collected.map(bulletinRowHTML).join('');
+        list.querySelectorAll('.btn-bul-delete').forEach(b => { b.disabled = true; b.classList.add('opacity-50','cursor-not-allowed'); b.title='Read-only mode'; });
+        return;
+      }
+      if (!res.ok) {
+        list.innerHTML = '<div class="text-sm text-red-400">Failed to load documents</div>';
+        return;
+      }
+      const { bulletins = [] } = await res.json();
+      list.innerHTML = bulletins.map(bulletinRowHTML).join('');
+      list.querySelectorAll('.btn-bul-delete').forEach(btn => btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const id = e.currentTarget.getAttribute('data-id');
+        if (!confirm('Delete this document?')) return;
+        await ensureAuthIfNeeded();
+        const r = await fetch(`/api/bulletins/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
+        if (!r.ok) { const t = await r.text(); alert('Delete failed: ' + t); return; }
+        await refreshBulletinsList();
+      }));
+    }
+
+    function attachBulletinHandlers() {
+      const form = document.getElementById('bulletin-form');
+      const resetBtn = document.getElementById('bf-reset');
+      const dateInput = document.getElementById('bf-date');
+      const today = new Date().toISOString().slice(0,10);
+      dateInput.value = today;
+
+      resetBtn.addEventListener('click', () => {
+        form.reset();
+        document.getElementById('bf-date').value = new Date().toISOString().slice(0,10);
+      });
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const payload = {
+          lang: document.getElementById('bf-lang').value,
+          title: document.getElementById('bf-title').value.trim(),
+          pdf: document.getElementById('bf-pdf').value.trim(),
+          date: document.getElementById('bf-date').value
+        };
+        if (!payload.pdf) { alert('PDF URL is required'); return; }
+        await ensureAuthIfNeeded();
+        const res = await fetch('/api/bulletins', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
+        if (!res.ok) { const t = await res.text(); alert('Save failed: ' + t); return; }
+        form.reset();
+        document.getElementById('bf-date').value = new Date().toISOString().slice(0,10);
+        await refreshBulletinsList();
+      });
+
+      refreshBulletinsList();
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       attachAdminHandlers();
       attachHighlightHandlers();
       attachPsHandlers();
+      attachBulletinHandlers();
       document.getElementById('hl-viewer-close').addEventListener('click', closeHighlightViewer);
       document.getElementById('hl-viewer').addEventListener('click', (e) => { if (e.target.id === 'hl-viewer') closeHighlightViewer(); });
     });
