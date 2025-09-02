@@ -59,6 +59,21 @@ function writeDb(db) {
   fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
 }
 
+// Local JSON fallback for bulletins when MongoDB is not configured
+const BULL_DB_PATH = path.join(__dirname, 'data', 'bulletins.json');
+function readBulletinsLocal() {
+  try {
+    const raw = fs.readFileSync(BULL_DB_PATH, 'utf8');
+    return JSON.parse(raw);
+  } catch (e) {
+    return { bulletins: [] };
+  }
+}
+function writeBulletinsLocal(db) {
+  fs.mkdirSync(path.dirname(BULL_DB_PATH), { recursive: true });
+  fs.writeFileSync(BULL_DB_PATH, JSON.stringify(db, null, 2));
+}
+
 // MongoDB setup
 let mongoClient = null;
 let mongoDb = null;
@@ -390,6 +405,23 @@ app.get('/api/bulletins', async (req, res) => {
       const archives = items.slice(1).map(({ id, title, date, pdf, lang }) => ({ id, title, date, pdf, lang }));
       if (latest) return res.json({ latest, archives });
     }
+
+    // JSON fallback (no MongoDB)
+    const local = readBulletinsLocal();
+    const all = (local.bulletins || [])
+      .filter(b => (b.lang || 'ta').toLowerCase() === lang)
+      .sort((a, b) => {
+        const da = String(a.date || '').slice(0, 10);
+        const db = String(b.date || '').slice(0, 10);
+        if (da === db) return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+        return db.localeCompare(da);
+      });
+    if (all.length) {
+      const latest = all[0];
+      const archives = all.slice(1).map(({ id, title, date, pdf, lang }) => ({ id, title, date, pdf, lang }));
+      return res.json({ latest, archives });
+    }
+
     const defaults = {
       ta: [{ id: 'ta-1', lang: 'ta', title: 'தமிழ் பதிப்பு', date: '2025-08-01', pdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
       en: [{ id: 'en-1', lang: 'en', title: 'English Edition', date: '2025-08-01', pdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
@@ -407,7 +439,16 @@ app.get('/api/bulletins', async (req, res) => {
 app.get('/api/bulletins/admin', basicAuth, async (req, res) => {
   try {
     const col = await ensureBulletins();
-    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    if (!col) {
+      const local = readBulletinsLocal();
+      const items = (local.bulletins || []).slice().sort((a, b) => {
+        const da = String(a.date || '').slice(0, 10);
+        const db = String(b.date || '').slice(0, 10);
+        if (da === db) return String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+        return db.localeCompare(da);
+      });
+      return res.json({ bulletins: items });
+    }
     const items = await col.find({}).sort({ date: -1, createdAt: -1 }).project({ _id: 0 }).toArray();
     return res.json({ bulletins: items });
   } catch (e) {
@@ -422,9 +463,16 @@ app.post('/api/bulletins', basicAuth, async (req, res) => {
     if (!L.has((lang||'').toLowerCase())) return res.status(400).json({ error: 'lang must be one of ta,en,kn,ml,te' });
     if (!pdf || typeof pdf !== 'string') return res.status(400).json({ error: 'pdf is required' });
     const col = await ensureBulletins();
-    if (!col) return res.status(503).json({ error: 'Database not configured' });
     const nid = id || `${lang}-${Date.now()}`;
     const doc = { id: nid, lang: lang.toLowerCase(), title: title || '', pdf: pdf.trim(), date: date || new Date().toISOString().slice(0,10), createdAt: new Date().toISOString() };
+    if (!col) {
+      const local = readBulletinsLocal();
+      const arr = Array.isArray(local.bulletins) ? local.bulletins : [];
+      const idx = arr.findIndex(b => b.id === nid);
+      if (idx !== -1) arr[idx] = doc; else arr.push(doc);
+      writeBulletinsLocal({ bulletins: arr });
+      return res.status(201).json({ bulletin: doc });
+    }
     await col.updateOne({ id: nid }, { $set: doc }, { upsert: true });
     const saved = await col.findOne({ id: nid }, { projection: { _id: 0 } });
     return res.status(201).json({ bulletin: saved });
@@ -438,7 +486,14 @@ app.delete('/api/bulletins/:id', basicAuth, async (req, res) => {
   try {
     const { id } = req.params;
     const col = await ensureBulletins();
-    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    if (!col) {
+      const local = readBulletinsLocal();
+      const before = (local.bulletins || []).length;
+      const arr = (local.bulletins || []).filter(b => b.id !== id);
+      writeBulletinsLocal({ bulletins: arr });
+      if (arr.length === before) return res.status(404).json({ error: 'Not found' });
+      return res.status(204).end();
+    }
     const { deletedCount } = await col.deleteOne({ id });
     if (!deletedCount) return res.status(404).json({ error: 'Not found' });
     return res.status(204).end();
