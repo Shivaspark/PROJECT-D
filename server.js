@@ -395,6 +395,12 @@ app.delete('/api/power-stones/:id', basicAuth, async (req, res) => {
 });
 
 // Bulletins API
+function monthKey(d) {
+  const s = String(d || '').slice(0, 10);
+  if (!/^[0-9]{4}-[0-9]{2}-[0-9]{2}$/.test(s)) return '';
+  return s.slice(0, 7);
+}
+
 app.get('/api/bulletins', async (req, res) => {
   try {
     const lang = (req.query.lang || 'ta').toLowerCase();
@@ -433,6 +439,37 @@ app.get('/api/bulletins', async (req, res) => {
     return res.json({ latest: arr[0], archives: [] });
   } catch (e) {
     return res.status(500).json({ error: 'Failed to load bulletins' });
+  }
+});
+
+// Grouped bulletins by month across all languages (public)
+app.get('/api/bulletins/grouped', async (req, res) => {
+  try {
+    const col = await ensureBulletins();
+    if (col) {
+      const items = await col.find({}).sort({ date: -1, createdAt: -1 }).project({ _id: 0 }).toArray();
+      const groups = {};
+      for (const b of items) {
+        const mk = monthKey(b.date);
+        if (!mk) continue;
+        if (!groups[mk]) groups[mk] = [];
+        groups[mk].push({ id: b.id, lang: b.lang, title: b.title, date: b.date, pdf: b.pdf });
+      }
+      const months = Object.keys(groups).sort((a, b) => b.localeCompare(a)).map(m => ({ month: m, items: groups[m] }));
+      return res.json({ months });
+    }
+    const local = readBulletinsLocal();
+    const groups = {};
+    for (const b of (local.bulletins || [])) {
+      const mk = monthKey(b.date);
+      if (!mk) continue;
+      if (!groups[mk]) groups[mk] = [];
+      groups[mk].push({ id: b.id, lang: b.lang, title: b.title, date: b.date, pdf: b.pdf });
+    }
+    const months = Object.keys(groups).sort((a, b) => b.localeCompare(a)).map(m => ({ month: m, items: groups[m] }));
+    return res.json({ months });
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to load grouped bulletins' });
   }
 });
 
@@ -723,24 +760,34 @@ app.listen(PORT, () => {
             console.log(`Power Stones seeded: ${newCount}`);
           }
         }
-        // Seed bulletins if empty
+        // Seed bulletins: ensure current month and previous month for all languages
         const bcol = await ensureBulletins();
         if (bcol) {
-          const bcount = await bcol.countDocuments();
-          if (bcount === 0) {
-            const now = new Date();
-            const iso = (d)=> new Date(d).toISOString().slice(0,10);
-            const seeds = [
-              { id:'ta-1', lang:'ta', title:'தமிழ் பதிப்பு', pdf:'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', date: iso(now), createdAt: now.toISOString() },
-              { id:'en-1', lang:'en', title:'English Edition', pdf:'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', date: iso(now), createdAt: now.toISOString() },
-              { id:'kn-1', lang:'kn', title:'Kannada Edition', pdf:'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', date: iso(now), createdAt: now.toISOString() },
-              { id:'ml-1', lang:'ml', title:'Malayalam Edition', pdf:'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', date: iso(now), createdAt: now.toISOString() },
-              { id:'te-1', lang:'te', title:'Telugu Edition', pdf:'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', date: iso(now), createdAt: now.toISOString() },
-            ];
-            await bcol.insertMany(seeds, { ordered: true }).catch(() => {});
-            const newB = await bcol.countDocuments();
-            console.log(`Bulletins seeded: ${newB}`);
+          const now = new Date();
+          const curr = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+          const prev = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1));
+          const iso = (d)=> new Date(d).toISOString().slice(0,10);
+          const langs = [
+            { code:'ta', title:'தமிழ் பதிப்பு' },
+            { code:'en', title:'English Edition' },
+            { code:'kn', title:'Kannada Edition' },
+            { code:'ml', title:'Malayalam Edition' },
+            { code:'te', title:'Telugu Edition' },
+          ];
+          let inserted = 0;
+          for (const when of [curr, prev]) {
+            for (const l of langs) {
+              const dateStr = iso(when);
+              const id = `${l.code}-${dateStr.slice(0,7)}`;
+              const exists = await bcol.findOne({ id });
+              if (!exists) {
+                const doc = { id, lang: l.code, title: l.title, pdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf', date: dateStr, createdAt: new Date().toISOString() };
+                await bcol.insertOne(doc).catch(()=>{});
+                inserted++;
+              }
+            }
           }
+          if (inserted) console.log(`Bulletins ensured/seeded: +${inserted}`);
         }
       }
     } catch (e) {
