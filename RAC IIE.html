@@ -1487,7 +1487,7 @@
                 try {
                     const res = await fetch(`/api/bulletins?lang=${encodeURIComponent(lang)}`);
                     if (!res.ok) throw new Error('Failed');
-                    const { latest, archives } = await res.json();
+                    const { latest } = await res.json();
                     const viewer = document.getElementById('bulletin-viewer');
                     const title = document.getElementById('bulletin-title');
                     const open = document.getElementById('bulletin-open');
@@ -1499,7 +1499,22 @@
                     title.textContent = (latest && latest.title) ? latest.title : 'Latest Bulletin';
                     open.href = latest && latest.pdf ? latest.pdf : '#';
                     dateEl.textContent = latest && latest.date ? new Date(latest.date).toDateString() : '';
-                    list.innerHTML = (archives || []).map(a => `<li><a href="${a.pdf}" target="_blank" class="text-gray-300 hover:text-accent-blue border-b border-gray-600 pb-2 block">${new Date(a.date).toLocaleDateString()} — ${a.title || 'Bulletin'}</a></li>`).join('');
+                    // Load grouped archives across all languages
+                    const grp = await fetch('/api/bulletins/grouped');
+                    if (grp.ok) {
+                        const { months = [] } = await grp.json();
+                        list.innerHTML = months.map(m => {
+                            const label = new Date(m.month + '-01').toLocaleString(undefined, { month: 'long', year: 'numeric' });
+                            const items = (m.items||[]).sort((a,b)=>a.lang.localeCompare(b.lang)).map(a => `<li class=\"pl-4\"><a href=\"${a.pdf}\" target=\"_blank\" class=\"text-gray-300 hover:text-accent-blue\">${a.lang.toUpperCase()} — ${a.title || 'Bulletin'}</a></li>`).join('');
+                            const id = 'm-' + m.month.replace(/[^0-9]/g,'');
+                            return `<li class=\"border-b border-gray-600\"><button data-target=\"${id}\" class=\"w-full text-left py-2 flex items-center justify-between\"><span class=\"text-gray-200\">${label}</span><span class=\"text-accent-blue\">▾</span></button><ul id=\"${id}\" class=\"hidden py-2 space-y-2\">${items}</ul></li>`;
+                        }).join('');
+                        list.querySelectorAll('button[data-target]').forEach(btn => btn.addEventListener('click', () => {
+                            const id = btn.getAttribute('data-target');
+                            const ul = document.getElementById(id);
+                            if (ul) ul.classList.toggle('hidden');
+                        }));
+                    }
                 } catch (e) {
                     const viewer = document.getElementById('bulletin-viewer');
                     viewer.src = 'about:blank';
