@@ -517,34 +517,34 @@
     }
     async function refreshPsList() {
       const list = document.getElementById('ps-list');
-      await ensureAuthIfNeeded();
-      let res = await fetch('/api/power-stones/admin', { headers: { ...getAuthHeader() } });
-      if (res.status === 503) {
-        const pub = await fetch('/api/power-stones');
+      // Always show public data first
+      const pub = await fetch('/api/power-stones');
+      if (pub.ok) {
         const { stones = [] } = await pub.json();
         list.innerHTML = stones.map(psCardHTML).join('');
-        list.querySelectorAll('.btn-ps-delete').forEach(b => { b.disabled = true; b.classList.add('opacity-50','cursor-not-allowed'); b.title='Read-only mode'; });
-      } else if (res.ok) {
-        const { stones = [] } = await res.json();
-        list.innerHTML = stones.map(psCardHTML).join('');
-        list.querySelectorAll('.btn-ps-delete').forEach(btn => btn.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          const id = e.currentTarget.getAttribute('data-id');
-          if (!confirm('Delete this poster?')) return;
-          await ensureAuthIfNeeded();
-          const r = await fetch(`/api/power-stones/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
-          if (!r.ok) { alert('Delete failed'); return; }
-          await refreshPsList();
+        list.querySelectorAll('.btn-ps-view, #ps-list img').forEach(btn => btn.addEventListener('click', (e) => {
+          const el = e.currentTarget; const src = el.getAttribute('data-src') || el.getAttribute('src'); const title = el.getAttribute('data-title') || ''; openHighlightViewer(src, title);
         }));
       } else {
         list.innerHTML = '<div class="text-sm text-red-400">Failed to load power stones</div>';
       }
-      list.querySelectorAll('.btn-ps-view, #ps-list img').forEach(btn => btn.addEventListener('click', (e) => {
-        const el = e.currentTarget;
-        const src = el.getAttribute('data-src') || el.getAttribute('src');
-        const title = el.getAttribute('data-title') || '';
-        openHighlightViewer(src, title);
-      }));
+      // Upgrade to admin data if authenticated without prompting
+      const res = await fetch('/api/power-stones/admin', { headers: { ...getAuthHeader() } });
+      if (res.ok) {
+        const { stones = [] } = await res.json();
+        list.innerHTML = stones.map(psCardHTML).join('');
+        list.querySelectorAll('.btn-ps-view, #ps-list img').forEach(btn => btn.addEventListener('click', (e) => {
+          const el = e.currentTarget; const src = el.getAttribute('data-src') || el.getAttribute('src'); const title = el.getAttribute('data-title') || ''; openHighlightViewer(src, title);
+        }));
+        list.querySelectorAll('.btn-ps-delete').forEach(btn => btn.addEventListener('click', async (e) => {
+          e.stopPropagation(); const id = e.currentTarget.getAttribute('data-id'); if (!confirm('Delete this poster?')) return; await ensureAuthIfNeeded(true);
+          const r = await fetch(`/api/power-stones/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
+          if (!r.ok) { alert('Delete failed'); return; }
+          await refreshPsList();
+        }));
+      } else if (res.status !== 503) {
+        list.querySelectorAll('.btn-ps-delete').forEach(b => { b.disabled = true; b.classList.add('opacity-50','cursor-not-allowed'); b.title='Read-only mode'; });
+      }
     }
     function attachPsHandlers() {
       const form = document.getElementById('ps-form');
