@@ -193,8 +193,8 @@
       const token = sessionStorage.getItem('adminAuth');
       return token ? { 'Authorization': 'Basic ' + token } : {};
     }
-    async function ensureAuthIfNeeded() {
-      if (sessionStorage.getItem('adminAuth')) return;
+    async function ensureAuthIfNeeded(force) {
+      if (sessionStorage.getItem('adminAuth') && !force) return;
       const u = prompt('Admin username');
       if (u === null) return;
       const p = prompt('Admin password');
