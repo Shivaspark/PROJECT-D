@@ -205,13 +205,13 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'RAC IIE.html'));
 });
 
-// Admin page
-app.get('/admin', basicAuth, (req, res) => {
+// Admin page (HTML only). Publicly viewable; admin actions stay protected via API.
+app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-// Also protect direct access to admin.html
-app.get('/admin.html', basicAuth, (req, res) => {
+// Direct access to admin.html
+app.get('/admin.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
