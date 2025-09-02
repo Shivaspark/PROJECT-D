@@ -392,68 +392,48 @@
 
     async function refreshHighlightsList() {
       const list = document.getElementById('highlights-list');
-      await ensureAuthIfNeeded();
+      // Try admin endpoint with existing token (no prompt)
       let res = await fetch('/api/highlights/admin', { headers: { ...getAuthHeader() } });
       if (res.status === 401) {
-        sessionStorage.removeItem('adminAuth');
-        await ensureAuthIfNeeded();
-        res = await fetch('/api/highlights/admin', { headers: { ...getAuthHeader() } });
+        // Not authenticated; fall back to public
+        const pub = await fetch('/api/highlights');
+        if (!pub.ok) { list.innerHTML = '<div class="text-sm text-red-400">Failed to load highlights</div>'; return; }
+        const { images = [] } = await pub.json();
+        const items = images.map((src, i) => ({ id: `fs-${i}`, src, title: '', order: i }));
+        list.innerHTML = '<div class="text-xs text-yellow-400 mb-2">Sign in to manage. Showing read-only highlights.</div>' + items.map(highlightItemRowHTML).join('');
+        list.querySelectorAll('.btn-hl-view, .hl-thumb').forEach(btn => btn.addEventListener('click', (e) => {
+          const el = e.currentTarget; const src = el.getAttribute('data-src') || el.getAttribute('src'); const title = el.getAttribute('data-title') || ''; openHighlightViewer(src, title);
+        }));
+        list.querySelectorAll('.btn-hl-delete').forEach(b => { b.disabled = true; b.classList.add('opacity-50','cursor-not-allowed'); b.title = 'Read-only mode'; });
+        return;
       }
       if (res.status === 503) {
         const pub = await fetch('/api/highlights');
-        if (!pub.ok) {
-          list.innerHTML = '<div class="text-sm text-red-400">Failed to load highlights</div>';
-          return;
-        }
+        if (!pub.ok) { list.innerHTML = '<div class="text-sm text-red-400">Failed to load highlights</div>'; return; }
         const { images = [] } = await pub.json();
         const items = images.map((src, i) => ({ id: `fs-${i}`, src, title: '', order: i }));
         list.innerHTML = '<div class="text-xs text-yellow-400 mb-2">Database not connected; showing read-only highlights.</div>' + items.map(highlightItemRowHTML).join('');
         list.querySelectorAll('.btn-hl-view, .hl-thumb').forEach(btn => btn.addEventListener('click', (e) => {
-          const el = e.currentTarget;
-          const src = el.getAttribute('data-src') || el.getAttribute('src');
-          const title = el.getAttribute('data-title') || '';
-          openHighlightViewer(src, title);
+          const el = e.currentTarget; const src = el.getAttribute('data-src') || el.getAttribute('src'); const title = el.getAttribute('data-title') || ''; openHighlightViewer(src, title);
         }));
-        list.querySelectorAll('.btn-hl-delete').forEach(b => {
-          b.disabled = true;
-          b.classList.add('opacity-50','cursor-not-allowed');
-          b.title = 'Read-only mode';
-        });
+        list.querySelectorAll('.btn-hl-delete').forEach(b => { b.disabled = true; b.classList.add('opacity-50','cursor-not-allowed'); b.title = 'Read-only mode'; });
         return;
       }
-      if (!res.ok) {
-        list.innerHTML = '<div class="text-sm text-red-400">Failed to load highlights</div>';
-        return;
-      }
+      if (!res.ok) { list.innerHTML = '<div class="text-sm text-red-400">Failed to load highlights</div>'; return; }
       const { highlights } = await res.json();
       const items = Array.isArray(highlights) ? highlights : [];
       list.innerHTML = items.map(highlightItemRowHTML).join('');
-
       list.querySelectorAll('.btn-hl-view, .hl-thumb').forEach(btn => btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const el = e.currentTarget;
-        const src = el.getAttribute('data-src') || el.getAttribute('src');
-        const title = el.getAttribute('data-title') || '';
-        openHighlightViewer(src, title);
+        e.stopPropagation(); const el = e.currentTarget; const src = el.getAttribute('data-src') || el.getAttribute('src'); const title = el.getAttribute('data-title') || ''; openHighlightViewer(src, title);
       }));
-
       list.querySelectorAll('.btn-hl-delete').forEach(btn => btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const id = e.currentTarget.getAttribute('data-id');
-        if (!confirm('Delete this highlight?')) return;
-        await ensureAuthIfNeeded();
+        e.stopPropagation(); const id = e.currentTarget.getAttribute('data-id'); if (!confirm('Delete this highlight?')) return; await ensureAuthIfNeeded(true);
         const r = await fetch(`/api/highlights/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
-        if (!r.ok) {
-          const t = await r.text();
-          alert('Delete failed: ' + t);
-          return;
-        }
+        if (!r.ok) { const t = await r.text(); alert('Delete failed: ' + t); return; }
         await refreshHighlightsList();
       }));
-
       list.querySelectorAll('.hl-row').forEach(row => row.addEventListener('click', () => {
-        list.querySelectorAll('.hl-row').forEach(el => el.classList.remove('ring-2','ring-accent-blue'));
-        row.classList.add('ring-2','ring-accent-blue');
+        list.querySelectorAll('.hl-row').forEach(el => el.classList.remove('ring-2','ring-accent-blue')); row.classList.add('ring-2','ring-accent-blue');
       }));
     }
 
