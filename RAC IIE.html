@@ -1493,7 +1493,8 @@
                     const open = document.getElementById('bulletin-open');
                     const dateEl = document.getElementById('bulletin-date');
                     const list = document.getElementById('bulletin-archives');
-                    const url = latest && latest.pdf ? `${latest.pdf}#page=1&zoom=page-width` : '';
+                    const pdf = latest && latest.pdf ? latest.pdf : '';
+                    const url = pdf ? `/api/pdf-proxy?url=${encodeURIComponent(pdf)}` : '';
                     viewer.src = url;
                     title.textContent = (latest && latest.title) ? latest.title : 'Latest Bulletin';
                     open.href = latest && latest.pdf ? latest.pdf : '#';
