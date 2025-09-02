@@ -588,37 +588,37 @@
 
     async function refreshBulletinsList() {
       const list = document.getElementById('bulletins-list');
-      await ensureAuthIfNeeded();
+      // Try admin view without prompting
       let res = await fetch('/api/bulletins/admin', { headers: { ...getAuthHeader() } });
       if (res.status === 503) {
         const langs = ['ta','en','kn','ml','te'];
         const collected = [];
         for (const l of langs) {
           const r = await fetch(`/api/bulletins?lang=${l}`);
-          if (r.ok) {
-            const { latest } = await r.json();
-            if (latest) collected.push(latest);
-          }
+          if (r.ok) { const { latest } = await r.json(); if (latest) collected.push(latest); }
         }
-        if (!collected.length) {
-          list.innerHTML = '<div class="text-sm text-yellow-400">Database not connected and no default bulletins available.</div>';
-          return;
-        }
+        if (!collected.length) { list.innerHTML = '<div class="text-sm text-yellow-400">Database not connected and no default bulletins available.</div>'; return; }
         list.innerHTML = '<div class="text-xs text-yellow-400 mb-2">Database not connected; showing read-only latest documents.</div>' + collected.map(bulletinRowHTML).join('');
         list.querySelectorAll('.btn-bul-delete').forEach(b => { b.disabled = true; b.classList.add('opacity-50','cursor-not-allowed'); b.title='Read-only mode'; });
         return;
       }
-      if (!res.ok) {
-        list.innerHTML = '<div class="text-sm text-red-400">Failed to load documents</div>';
+      if (res.status === 401) {
+        // Not signed in; show latest per language in read-only mode
+        const langs = ['ta','en','kn','ml','te'];
+        const collected = [];
+        for (const l of langs) {
+          const r = await fetch(`/api/bulletins?lang=${l}`);
+          if (r.ok) { const { latest } = await r.json(); if (latest) collected.push(latest); }
+        }
+        list.innerHTML = '<div class="text-xs text-yellow-400 mb-2">Sign in to manage. Showing read-only latest documents.</div>' + collected.map(bulletinRowHTML).join('');
+        list.querySelectorAll('.btn-bul-delete').forEach(b => { b.disabled = true; b.classList.add('opacity-50','cursor-not-allowed'); b.title='Read-only mode'; });
         return;
       }
+      if (!res.ok) { list.innerHTML = '<div class="text-sm text-red-400">Failed to load documents</div>'; return; }
       const { bulletins = [] } = await res.json();
       list.innerHTML = bulletins.map(bulletinRowHTML).join('');
       list.querySelectorAll('.btn-bul-delete').forEach(btn => btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        const id = e.currentTarget.getAttribute('data-id');
-        if (!confirm('Delete this document?')) return;
-        await ensureAuthIfNeeded();
+        e.stopPropagation(); const id = e.currentTarget.getAttribute('data-id'); if (!confirm('Delete this document?')) return; await ensureAuthIfNeeded(true);
         const r = await fetch(`/api/bulletins/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
         if (!r.ok) { const t = await r.text(); alert('Delete failed: ' + t); return; }
         await refreshBulletinsList();
