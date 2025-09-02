@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const multer = require('multer');
+const https = require('https');
 
 require('dotenv').config();
 
@@ -552,6 +553,66 @@ app.get('/api/projects/import', basicAuth, async (req, res) => {
     return res.json(result);
   } catch (e) {
     return res.status(500).json({ error: 'Failed to import', message: e.message });
+  }
+});
+
+// Secure PDF proxy to bypass X-Frame-Options on external hosts while limiting scope
+app.get('/api/pdf-proxy', async (req, res) => {
+  try {
+    const rawUrl = String(req.query.url || '');
+    if (!rawUrl) return res.status(400).send('url required');
+    let u;
+    try { u = new URL(rawUrl); } catch { return res.status(400).send('invalid url'); }
+    if (u.protocol !== 'https:') return res.status(400).send('https only');
+
+    const allowList = (process.env.PDF_PROXY_ALLOWLIST || 'www.w3.org').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    if (!allowList.includes(u.hostname.toLowerCase())) return res.status(403).send('host not allowed');
+
+    const MAX = 25 * 1024 * 1024; // 25MB cap
+    let total = 0;
+
+    function handle(upstream) {
+      const ct = String(upstream.headers['content-type'] || '').toLowerCase();
+      if (!ct.includes('application/pdf')) {
+        res.status(415).send('not a pdf');
+        upstream.destroy();
+        return;
+      }
+      const cl = Number(upstream.headers['content-length'] || 0);
+      if (cl && cl > MAX) {
+        res.status(413).send('file too large');
+        upstream.destroy();
+        return;
+      }
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+      upstream.on('data', chunk => {
+        total += chunk.length;
+        if (total > MAX) {
+          try { res.status(413).end('file too large'); } catch {}
+          upstream.destroy();
+          return;
+        }
+        res.write(chunk);
+      });
+      upstream.on('end', () => res.end());
+      upstream.on('error', () => { if (!res.headersSent) res.status(502).end('stream error'); });
+    }
+
+    https.get(u.toString(), (r) => {
+      if (r.statusCode && r.statusCode >= 300 && r.statusCode < 400 && r.headers.location) {
+        try {
+          const ru = new URL(r.headers.location, u);
+          https.get(ru.toString(), handle).on('error', () => res.status(502).send('fetch failed'));
+        } catch {
+          res.status(502).send('bad redirect');
+        }
+      } else {
+        handle(r);
+      }
+    }).on('error', () => res.status(502).send('fetch failed'));
+  } catch (e) {
+    res.status(500).send('proxy error');
   }
 });
 

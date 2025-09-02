@@ -590,7 +590,7 @@
                             <div class="flex flex-wrap gap-2" id="bulletin-lang-tabs"></div>
                         </div>
                         <div class="rounded-lg overflow-hidden border border-gray-700">
-                            <iframe id="bulletin-viewer" src="" class="w-full h-[70vh] bg-dark-bg" title="Bulletin PDF" loading="lazy"></iframe>
+                            <iframe id="bulletin-viewer" src="" class="w-full h-[70vh] bg-dark-bg" title="Bulletin PDF" type="application/pdf"></iframe>
                         </div>
                         <div class="mt-3 flex items-center justify-between">
                             <a id="bulletin-open" href="#" target="_blank" class="font-semibold text-primary-blue hover:text-accent-blue">Open Full Bulletin &rarr;</a>
@@ -1493,7 +1493,8 @@
                     const open = document.getElementById('bulletin-open');
                     const dateEl = document.getElementById('bulletin-date');
                     const list = document.getElementById('bulletin-archives');
-                    const url = latest && latest.pdf ? `${latest.pdf}#page=1&zoom=page-width` : '';
+                    const pdf = latest && latest.pdf ? latest.pdf : '';
+                    const url = pdf ? `/api/pdf-proxy?url=${encodeURIComponent(pdf)}` : '';
                     viewer.src = url;
                     title.textContent = (latest && latest.title) ? latest.title : 'Latest Bulletin';
                     open.href = latest && latest.pdf ? latest.pdf : '#';
