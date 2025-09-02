@@ -1237,7 +1237,9 @@
                     projTrack.innerHTML = featured.map(projectCardHTML).join('');
                 }
                 if (upTrack) {
+                    const current = [...existing, ...flagship];
                     upTrack.innerHTML = [
+                        ...current.map(projectCardHTML),
                         separatorCardHTML(),
                         ...upcoming.map(projectCardHTML)
                     ].join('');
