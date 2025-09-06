@@ -662,9 +662,12 @@
     }
 
     async function updateDbStatus(){
+      const s = document.getElementById('db-status');
       try {
-        const res = await fetch('/api/health/db');
-        const s = document.getElementById('db-status');
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 8000);
+        const res = await fetch('/api/health/db?timeoutMs=7000', { signal: ctrl.signal });
+        clearTimeout(t);
         if (!res.ok) throw new Error('status failed');
         const info = await res.json();
         const text = info.connected ? `DB: connected (${info.db || info.provider})` : 'DB: disconnected';
@@ -673,8 +676,7 @@
         s.classList.toggle('text-green-400', !!info.connected);
         s.classList.toggle('text-red-400', !info.connected);
       } catch {
-        const s = document.getElementById('db-status');
-        s.textContent = 'DB: unknown';
+        s.textContent = 'DB: disconnected';
         s.classList.remove('hidden');
         s.classList.remove('text-green-400');
         s.classList.add('text-red-400');
