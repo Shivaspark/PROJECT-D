@@ -415,19 +415,26 @@ app.get('/api/ping', (req, res) => {
   res.json({ ok: true, time: new Date().toISOString() });
 });
 
-// DB Health
+// DB Health (with timeout guard so serverless doesn't 504)
 app.get('/api/health/db', async (req, res) => {
-  try {
+  const timeoutMs = Number(req.query.timeoutMs || 7000);
+  const work = (async () => {
     const col = await ensureMongo();
     if (!col) {
       const local = readDb();
-      return res.json({ connected: false, provider: 'json', message: 'MONGODB_URI not set or unreachable', count: (local.projects||[]).length });
+      return { connected: false, provider: 'json', message: 'MONGODB_URI not set or unreachable', count: (local.projects||[]).length };
     }
     await mongoDb.command({ ping: 1 });
     const count = await col.countDocuments();
-    return res.json({ connected: true, provider: 'mongodb', db: mongoDb.databaseName, count });
+    return { connected: true, provider: 'mongodb', db: mongoDb.databaseName, count };
+  })();
+  const timer = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), timeoutMs));
+  try {
+    const result = await Promise.race([work, timer]);
+    return res.json(result);
   } catch (e) {
-    return res.status(500).json({ connected: false, provider: 'mongodb', error: e.message });
+    // Return a non-error JSON so the UI can show disconnected instead of hanging
+    return res.json({ connected: false, provider: 'mongodb', error: e.message || 'timeout' });
   }
 });
 
