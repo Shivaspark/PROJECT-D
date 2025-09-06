@@ -53,6 +53,8 @@ async function ensureMongo() {
   if (!uri) return null;
   mongoClient = new MongoClient(uri, {
     serverSelectionTimeoutMS: 5000,
+    connectTimeoutMS: 5000,
+    socketTimeoutMS: 5000,
     serverApi: { version: ServerApiVersion.v1, strict: true, deprecationErrors: true },
   });
   await mongoClient.connect();
@@ -406,6 +408,11 @@ app.post('/api/upload', basicAuth, upload.single('file'), async (req, res) => {
   } catch (e) {
     return res.status(500).json({ error: 'Upload failed' });
   }
+});
+
+// Simple ping to verify function is reachable
+app.get('/api/ping', (req, res) => {
+  res.json({ ok: true, time: new Date().toISOString() });
 });
 
 // DB Health
