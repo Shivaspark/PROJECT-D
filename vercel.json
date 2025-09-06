@@ -1,6 +1,5 @@
 {
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/index" },
     { "source": "/", "destination": "/RAC%20IIE.html" },
     { "source": "/admin", "destination": "/admin.html" }
   ]
