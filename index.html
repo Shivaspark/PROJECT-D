@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rotaract Club • React</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Lato', 'sans-serif'],
+            heading: ['Cinzel', 'serif'],
+          },
+          colors: {
+            'primary-blue': '#005daa',
+            'accent-blue': '#00a9e0',
+            'dark-bg': '#111827',
+            'dark-secondary': '#1f2937',
+            'light-text': '#f9fafb',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    .hero-bg { background-image: linear-gradient(rgba(17, 24, 39, 0.8), rgba(17, 24, 39, 0.8)), url('assets/images/gallery/homeimg.jpg'); background-size: cover; background-position: center; }
+    h1, h2 { font-family: 'Cinzel', serif; font-weight: 900; }
+    h3 { font-weight: 700; }
+    .project-card { min-height: 28rem; display: flex; flex-direction: column; }
+    .project-card img { height: 12rem; object-fit: cover; }
+    .project-card .p-6 { display: flex; flex-direction: column; flex: 1; }
+    .project-card .p-6 a { margin-top: auto; }
+    .project-card--separator { align-items: center; justify-content: center; }
+    .project-card--separator .p-6 { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    @media (min-width: 1024px) { .project-card { min-height: 30rem; } .project-card img { height: 14rem; } }
+  </style>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-dark-bg text-light-text">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useEffect, useRef, useState, Fragment } = React;
+
+    function Header() {
+      const [open, setOpen] = useState(false);
+      useEffect(() => {
+        function onHashLink(e) {
+          const a = e.target.closest('a[href^="#"]');
+          if (!a) return;
+          const id = a.getAttribute('href').slice(1);
+          const el = document.getElementById(id);
+          if (el) {
+            e.preventDefault();
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            setOpen(false);
+          }
+        }
+        document.addEventListener('click', onHashLink);
+        return () => document.removeEventListener('click', onHashLink);
+      }, []);
+      return (
+        <header id="header" className="bg-dark-bg/80 backdrop-blur-sm shadow-lg fixed w-full top-0 z-50">
+          <nav className="container mx-auto px-6 py-3 flex items-center gap-4">
+            <a href="#" className="flex items-center space-x-2 min-w-0 max-w-xs">
+              <img src="assets/images/gallery/logo.png" alt="Club Logo" className="h-12 w-12 rounded-full border-2 border-accent-blue" loading="eager" decoding="async" />
+              <span className="font-bold text-sm md:text-base text-white font-heading leading-tight">Rotaract Club of Info Institute of Engineering</span>
+            </a>
+            <div className="hidden md:flex space-x-4 items-center flex-grow justify-end">
+              <a href="#home" className="text-gray-300 hover:text-accent-blue transition duration-300 whitespace-nowrap">Home</a>
+              <a href="#about" className="text-gray-300 hover:text-accent-blue transition duration-300 whitespace-nowrap">About Us</a>
+              <a href="#events" className="text-gray-300 hover:text-accent-blue transition duration-300 whitespace-nowrap">Blood Donation</a>
+              <a href="#projects" className="text-gray-300 hover:text-accent-blue transition duration-300 whitespace-nowrap">Projects</a>
+            </div>
+            <a href="#contact" className="hidden md:block bg-primary-blue text-white px-3 py-2 rounded-full hover:bg-accent-blue transition duration-300 shadow-md text-center whitespace-nowrap flex-shrink-0 ml-4">Join Us</a>
+            <button aria-label="Toggle menu" onClick={() => setOpen(v => !v)} className="md:hidden text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+            </button>
+          </nav>
+          {open && (
+            <div className="md:hidden bg-dark-bg/90">
+              <a href="#home" className="block py-2 px-6 text-sm text-gray-300 hover:bg-primary-blue">Home</a>
+              <a href="#about" className="block py-2 px-6 text-sm text-gray-300 hover:bg-primary-blue">About Us</a>
+              <a href="#events" className="block py-2 px-6 text-sm text-gray-300 hover:bg-primary-blue">Blood Donation</a>
+              <a href="#projects" className="block py-2 px-6 text-sm text-gray-300 hover:bg-primary-blue">Projects</a>
+              <div className="p-4">
+                <a href="#contact" className="block text-center w-full bg-primary-blue text-white px-5 py-2 rounded-full hover:bg-accent-blue transition duration-300 shadow">Join Us</a>
+              </div>
+            </div>
+          )}
+        </header>
+      );
+    }
+
+    function HeroSection() {
+      return (
+        <section id="home" className="hero-bg h-[calc(100vh-64px)] flex items-center justify-center text-white text-center">
+          <div className="container mx-auto px-6">
+            <div className="py-5">
+              <img src="assets/images/gallery/white.png" alt="Club Logo" className="h-60 w-60 mx-auto" fetchpriority="high" decoding="sync" />
+            </div>
+            <h1 className="text-4xl md:text-6xl font-black leading-tight mb-4">ACT, MAKE AN IMPACT</h1>
+            <p className="text-lg md:text-xl max-w-3xl mx-auto mb-8">Welcome to the Rotaract Club of Info Institute of Engineering. We are a force of young leaders, forging change and making a legendary impact.</p>
+            <a href="#about" className="bg-accent-blue text-white px-8 py-3 rounded-full text-lg font-bold hover:bg-blue-500 transition duration-300 transform hover:scale-105">Discover Our Quest</a>
+          </div>
+        </section>
+      );
+    }
+
+    function AboutSection() {
+      const [open, setOpen] = useState(false);
+      return (
+        <section id="about" className="py-20 bg-dark-secondary">
+          <div className="container mx-auto px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-black text-white">Royal in Soul, Wild in Sky</h2>
+              <p className="text-gray-400 mt-2">Strength Through Unity</p>
+              <div className="w-24 h-1 bg-primary-blue mx-auto mt-4" />
+            </div>
+            <div className="flex flex-col items-center gap-12">
+              <div className="w-full lg:w-3/4">
+                <img src="assets/images/gallery/team.jpg" alt="Club Members" className="rounded-lg shadow-lg w-full" loading="lazy" decoding="async" />
+              </div>
+              <div className="w-full text-center md:text-left lg:w-3/4">
+                <h3 className="text-2xl font-bold text-accent-blue mb-4">Who We Are</h3>
+                <p className="text-gray-300 mb-4 leading-relaxed">The Rotaract Club of Info Institute of Engineering is a formidable clan of students and young professionals. We are part of a global network of Rotaract clubs, united under the banner of Rotary International.</p>
+                <p className="text-gray-300 mb-6 leading-relaxed">Our quest is to empower young men and women, honing the skills needed for personal growth, to conquer the challenges facing our communities, and to forge unbreakable bonds of friendship and service across the world.</p>
+                {open && (
+                  <div className="mb-6">
+                    <div className="bg-dark-bg p-6 rounded-lg border-l-4 border-accent-blue">
+                      <h4 className="text-xl font-bold text-accent-blue mb-4">The Rotaract Codex</h4>
+                      <p className="text-gray-300 mb-4 leading-relaxed">Founded on the pillars of Service Above Self, we stand as guardians of change in our realm. Our code is simple yet profound: to serve with honor, lead with wisdom, and inspire with action. We believe that every young leader has the power to forge a legacy that transcends time.</p>
+                      <p className="text-gray-300 leading-relaxed">Through community service, professional development, international understanding, and leadership training, we shape not just careers, but characters. Our fellowship extends beyond borders, creating a global network of change-makers who share a common vision of a better world.</p>
+                    </div>
+                  </div>
+                )}
+                <button onClick={() => setOpen(v => !v)} className="text-accent-blue font-semibold hover:underline focus:outline-none transition-all duration-300">
+                  <span>{open ? 'Show Less' : 'Know About Us'}</span> <span>{open ? '↑' : '→'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    function EventCard({ img, title, children, qr, link }) {
+      return (
+        <div className="bg-dark-secondary rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
+          <img src={img} alt={title} className="w-full h-48 object-cover" loading="lazy" decoding="async" />
+          <div className="p-6 text-center md:text-left">
+            <h3 className="text-xl font-bold my-2 text-accent-blue">{title}</h3>
+            <p className="text-gray-400 mb-4">{children}</p>
+            {qr && <img src={qr} alt="QR" className="w-20 h-20 object-cover mx-auto md:mx-0" loading="lazy" decoding="async" />}
+            {link && (
+              <a href={link} className="font-semibold text-primary-blue hover:text-accent-blue" target="_blank" rel="noreferrer">Follow us on →</a>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function EventsSection() {
+      return (
+        <section id="events" className="py-20">
+          <div className="container mx-auto px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-black text-white">Our Initiatives</h2>
+              <p className="text-gray-400 mt-2">Join our next epic adventure!</p>
+              <div className="w-24 h-1 bg-primary-blue mx-auto mt-4" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <EventCard img="assets/images/gallery/i-1.jpg" title="HEMODRAX" qr="assets/images/gallery/qr-hemo.png">We are committed to saving lives. Scan the QR code to join our WhatsApp group for urgent blood requests.</EventCard>
+              <EventCard img="assets/images/gallery/i-2.jpg" title="INFO KURAL" link="https://www.instagram.com/info_kural_rac_info?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==">A Thirukkural initiative where our members create videos, spreading its wisdom to society while building camera confidence and honoring our Tamil language.</EventCard>
+              <EventCard img="assets/images/gallery/i-3.jpg" title="KURAL OVIYAM" link="https://www.instagram.com/kural_oviyam_rac_info?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==">Kural Oviyam is a Tamil poetry initiative where our club members contribute 365 original poems continuously for 365 days.</EventCard>
+            </div>
+          </div>
+        </section>
+      );
+    }
+
+    function useCarousel(ids) {
+      const viewportRef = useRef(null);
+      const prev = () => {
+        const vp = viewportRef.current; if (!vp) return; vp.scrollBy({ left: -vp.clientWidth, behavior: 'smooth' });
+      };
+      const next = () => {
+        const vp = viewportRef.current; if (!vp) return; vp.scrollBy({ left: vp.clientWidth, behavior: 'smooth' });
+      };
+      return { viewportRef, prev, next };
+    }
+
+    function ProjectsSection() {
+      const [projects, setProjects] = useState([]);
+      useEffect(() => { fetch('/api/projects').then(r => r.json()).then(d => setProjects(Array.isArray(d.projects) ? d.projects : [])).catch(() => setProjects([])); }, []);
+      const existing = projects.filter(p => p.type === 'existing' || p.type === 'flagship');
+      const upcoming = projects.filter(p => p.type === 'upcoming');
+
+      const carA = useCarousel();
+      const carB = useCarousel();
+
+      const Card = (p) => (
+        <div className="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
+          <div className="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
+            <img src={p.image} alt={p.title} className="w-full h-48 object-cover" loading="lazy" decoding="async" />
+            <div className="p-6">
+              <h3 className="text-xl font-bold my-2 text-accent-blue">{p.title}</h3>
+              <p className="text-gray-400 mb-4">{p.description}</p>
+              <a href="#contact" className="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest →</a>
+            </div>
+          </div>
+        </div>
+      );
+
+      return (
+        <Fragment>
+          <section id="projects" className="py-20 bg-dark-secondary">
+            <div className="container mx-auto px-6">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-black text-white">Our Flagships Projects 2025 - 2026</h2>
+                <p className="text-gray-400 mt-2">Forging a lasting legacy in our realm.</p>
+                <div className="w-24 h-1 bg-primary-blue mx-auto mt-4" />
+              </div>
+              <div className="relative">
+                <button onClick={carA.prev} aria-label="Previous" className="hidden sm:flex items-center justify-center absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-primary-blue text-white w-10 h-10 rounded-full shadow hover:bg-accent-blue transition"><span>&lt;</span></button>
+                <button onClick={carA.next} aria-label="Next" className="hidden sm:flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-primary-blue text-white w-10 h-10 rounded-full shadow hover:bg-accent-blue transition"><span>&gt;</span></button>
+                <div ref={carA.viewportRef} className="overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth px-1">
+                  <div className="flex gap-8 py-2">
+                    {existing.map(p => <Card key={p.id} {...p} />)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="py-20 bg-dark-secondary">
+            <div className="container mx-auto px-6">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl md:text-4xl font-black text-white">Projects 2025 - 2026</h2>
+                <p className="text-gray-400 mt-2">Get Connected with our Projects.</p>
+                <div className="w-24 h-1 bg-primary-blue mx-auto mt-4" />
+              </div>
+              <div className="relative">
+                <button onClick={carB.prev} aria-label="Previous" className="hidden sm:flex items-center justify-center absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-primary-blue text-white w-10 h-10 rounded-full shadow hover:bg-accent-blue transition"><span>&lt;</span></button>
+                <button onClick={carB.next} aria-label="Next" className="hidden sm:flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-primary-blue text-white w-10 h-10 rounded-full shadow hover:bg-accent-blue transition"><span>&gt;</span></button>
+                <div ref={carB.viewportRef} className="overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth px-1">
+                  <div className="flex gap-8 py-2">
+                    {existing.map(p => <Card key={'curr-'+p.id} {...p} />)}
+                    <div className="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
+                      <div className="project-card project-card--separator bg-dark-bg rounded-lg shadow-lg overflow-hidden border border-accent-blue h-full flex flex-col items-center justify-center text-center p-8">
+                        <div className="p-6 flex flex-col items-center text-center">
+                          <h3 className="text-2xl font-bold text-accent-blue mb-2">Upcoming Projects</h3>
+                          <p className="text-gray-400">Scroll right to explore what's coming next.</p>
+                          <p className="text-gray-400 italic mt-3">“Small acts today shape the big changes of tomorrow.”</p>
+                        </div>
+                      </div>
+                    </div>
+                    {upcoming.map(p => <Card key={'up-'+p.id} {...p} />)}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </Fragment>
+      );
+    }
+
+    function ContactStub() {
+      return (
+        <section id="contact" className="py-20">
+          <div className="container mx-auto px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-black text-white">Send a Scroll</h2>
+              <p className="text-gray-400 mt-2">We await your message. Join our clan or forge an alliance!</p>
+              <div className="w-24 h-1 bg-primary-blue mx-auto mt-4" />
+            </div>
+            <p className="text-gray-400 text-center">Contact form and other sections are available on the original page. This React view focuses on Header, Hero, About, Events, and Projects.</p>
+          </div>
+        </section>
+      );
+    }
+
+    function App() {
+      return (
+        <div className="pt-16">
+          <Header />
+          <HeroSection />
+          <AboutSection />
+          <EventsSection />
+          <ProjectsSection />
+          <ContactStub />
+          <footer className="bg-dark-secondary text-white py-10 border-t border-gray-800">
+            <div className="container mx-auto px-6 text-center">
+              <p>&copy; Developed by RINESH GURU S &amp; SIVASHANKARAN R<br />&copy; 2025 Rotaract Club of Info Institute of Engineering. All Rights Reserved.</p>
+              <div className="flex justify-center space-x-6 mt-4">
+                <a href="#" className="hover:text-accent-blue transition duration-300">Facebook</a>
+                <a href="#" className="hover:text-accent-blue transition duration-300">Instagram</a>
+                <a href="#" className="hover:text-accent-blue transition duration-300">LinkedIn</a>
+              </div>
+            </div>
+          </footer>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
