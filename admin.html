@@ -400,6 +400,10 @@
         let res;
         if (editId) {
           res = await fetch(`/api/projects/${editId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
+          if (!res.ok) {
+            // Fallback for hosts blocking PUT
+            res = await fetch('/api/projects/update', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify({ id: editId, ...payload }) });
+          }
         } else {
           res = await fetch('/api/projects', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
         }
