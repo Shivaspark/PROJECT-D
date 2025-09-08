@@ -496,6 +496,7 @@ app.get('/api/projects', async (req, res) => {
   try {
     const { type } = req.query;
     const items = await dbGetProjects(type);
+    res.set('Cache-Control', 'no-store');
     res.json({ projects: items });
   } catch (e) {
     res.status(500).json({ error: 'Failed to load projects' });
@@ -531,7 +532,8 @@ app.delete('/api/projects/:id', basicAuth, async (req, res) => {
   try {
     const ok = await dbDeleteProject(id);
     if (!ok) return res.status(404).json({ error: 'Not found' });
-    res.status(204).end();
+    res.set('Cache-Control', 'no-store');
+    res.json({ deleted: true, id });
   } catch (e) {
     res.status(500).json({ error: 'Failed to delete' });
   }
