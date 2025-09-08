@@ -260,10 +260,11 @@
       const carA = useCarousel();
       const carB = useCarousel();
 
+      function absAsset(u){ return (window.__API_BASE && typeof u==='string' && u.startsWith('assets/')) ? (window.__API_BASE + '/' + u) : u; }
       const Card = (p) => (
         <div className="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
           <div className="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-            <img src={p.image} alt={p.title} className="w-full h-48 object-cover" loading="lazy" decoding="async" />
+            <img src={absAsset(p.image)} alt={p.title} className="w-full h-48 object-cover" loading="lazy" decoding="async" />
             <div className="p-6">
               <h3 className="text-xl font-bold my-2 text-accent-blue">{p.title}</h3>
               <p className="text-gray-400 mb-4">{p.description}</p>
@@ -576,7 +577,7 @@
       const [cards, setCards] = useState([]);
       const [flipped, setFlipped] = useState([]);
       const [matched, setMatched] = useState([]);
-      const emojis = ['🐉','🛡️','⚔��','🧙‍♂️','🪄','🏹','🪙','🧿'];
+      const emojis = ['🐉','🛡️','⚔️','🧙‍♂️','🪄','🏹','🪙','🧿'];
       useEffect(()=>{
         if(!open) return;
         const deck = [...emojis, ...emojis].map((v,i)=>({ id:i, v })).sort(()=>Math.random()-0.5);
