@@ -208,7 +208,30 @@
 
     function ProjectsSection() {
       const [projects, setProjects] = useState([]);
-      useEffect(() => { fetch('/api/projects').then(r => r.json()).then(d => setProjects(Array.isArray(d.projects) ? d.projects : [])).catch(() => setProjects([])); }, []);
+      useEffect(() => {
+        let alive = true;
+        async function load() {
+          try {
+            const r = await fetch('/api/projects');
+            if (r.ok) {
+              const d = await r.json();
+              if (alive) setProjects(Array.isArray(d.projects) ? d.projects : []);
+              return;
+            }
+          } catch {}
+          try {
+            const r2 = await fetch('data/projects.json');
+            if (r2.ok) {
+              const d2 = await r2.json();
+              if (alive) setProjects(Array.isArray(d2.projects) ? d2.projects : []);
+              return;
+            }
+          } catch {}
+          if (alive) setProjects([]);
+        }
+        load();
+        return () => { alive = false; };
+      }, []);
       const existing = projects.filter(p => p.type === 'existing' || p.type === 'flagship');
       const upcoming = projects.filter(p => p.type === 'upcoming');
 
