@@ -8,6 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://placehold.co">
+    <link rel="preload" as="image" href="/assets/images/gallery/homeimg.jpg" fetchpriority="high">
+    <link rel="preload" as="image" href="/assets/images/gallery/white.png" fetchpriority="high">
     <script src="https://cdn.jsdelivr.net/npm/lucide-react@0.379.0/dist/lucide-react.min.js"></script>
     <script>
         tailwind.config = {
@@ -171,7 +174,7 @@
     <header id="header" class="bg-dark-bg/80 backdrop-blur-sm shadow-lg fixed w-full top-0 z-50">
         <nav class="container mx-auto px-6 py-3 flex items-center gap-4">
             <a href="#" class="flex items-center space-x-2 min-w-0 max-w-xs">
-                <img src="assets/images/gallery/logo.png" alt="Club Logo" class="h-12 w-12 rounded-full border-2 border-accent-blue">
+                <img src="assets/images/gallery/logo.png" alt="Club Logo" class="h-12 w-12 rounded-full border-2 border-accent-blue" loading="eager" decoding="async">
                 <span class="font-bold text-sm md:text-base text-white font-heading leading-tight">Rotaract Club of Info Institute of Engineering</span>
             </a>
             <div class="hidden md:flex space-x-4 items-center flex-grow justify-end">
@@ -213,7 +216,7 @@
         <section id="home" class="hero-bg h-[calc(100vh-64px)] flex items-center justify-center text-white text-center">
             <div class="container mx-auto px-6">
                 <div class="py-5">
-                    <img src="assets/images/gallery/white.png" alt="Club Logo" class="h-60 w-60 mx-auto">
+                    <img src="assets/images/gallery/white.png" alt="Club Logo" class="h-60 w-60 mx-auto" fetchpriority="high" decoding="sync">
                 </div>
                 <h1 class="text-4xl md:text-6xl font-black leading-tight mb-4 animate-fade-in-down">ACT, MAKE AN IMPACT</h1>
                 <p class="text-lg md:text-xl max-w-3xl mx-auto mb-8 animate-fade-in-up">Welcome to the Rotaract Club of Info Institute of Engineering. We are a force of young leaders, forging change and making a legendary impact.</p>
@@ -231,7 +234,7 @@
                 </div>
                 <div class="flex flex-col items-center gap-12">
                     <div class="w-full lg:w-3/4">
-                        <img src="assets/images/gallery/team.jpg" alt="Club Members" class="rounded-lg shadow-lg w-full">
+                        <img src="assets/images/gallery/team.jpg" alt="Club Members" class="rounded-lg shadow-lg w-full" loading="lazy" decoding="async">
                     </div>
                     <div class="w-full text-center md:text-left lg:w-3/4">
                         <h3 class="text-2xl font-bold text-accent-blue mb-4">Who We Are</h3>
@@ -275,16 +278,16 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <!-- Event Card 1 -->
                     <div class="bg-dark-secondary rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
-                        <img src="assets/images/gallery/i-1.jpg" alt="Event 1" class="w-full h-48 object-cover">
+                        <img src="assets/images/gallery/i-1.jpg" alt="Event 1" class="w-full h-48 object-cover" loading="lazy" decoding="async">
                         <div class="p-6 text-center">
                             <h3 class="text-xl font-bold my-2 text-accent-blue">HEMODRAX</h3>
                             <p class="text-gray-400 mb-4">We are committed to saving lives. Scan the QR code to join our WhatsApp group for urgent blood requests.</p>
-                            <img src="assets/images/gallery/qr-hemo.png" alt="WhatsApp QR Code" class="w-20 h-20 object-cover mx-auto">
+                            <img src="assets/images/gallery/qr-hemo.png" alt="WhatsApp QR Code" class="w-20 h-20 object-cover mx-auto" loading="lazy" decoding="async">
                         </div>
                     </div>
                     <!-- Event Card 2 -->
                     <div class="bg-dark-secondary rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
-                        <img src="assets/images/gallery/i-2.jpg" alt="Event 2" class="w-full h-48 object-cover">
+                        <img src="assets/images/gallery/i-2.jpg" alt="Event 2" class="w-full h-48 object-cover" loading="lazy" decoding="async">
                         <div class="p-6">
                             <span class="text-sm text-gray-500">1 June - 31 July</span>
                             <h3 class="text-xl font-bold my-2 text-accent-blue">INFO KURAL</h3>
@@ -294,7 +297,7 @@
                     </div>
                     <!-- Event Card 3 -->
                     <div class="bg-dark-secondary rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
-                        <img src="assets/images/gallery/i-3.jpg" alt="Event 3" class="w-full h-48 object-cover">
+                        <img src="assets/images/gallery/i-3.jpg" alt="Event 3" class="w-full h-48 object-cover" loading="lazy" decoding="async">
                         <div class="p-6">
                             <span class="text-sm text-gray-500">1 June - 31 July</span>
                             <h3 class="text-xl font-bold my-2 text-accent-blue">KURAL OVIYAM</h3>
@@ -326,7 +329,7 @@
                             <!-- Slide 1 -->
                             <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
                                 <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-                                    <img src="assets/images/projects/p-2.jpg" alt="DAYA 2026" class="w-full h-48 object-cover">
+                                    <img src="assets/images/projects/p-2.jpg" alt="DAYA 2026" class="w-full h-48 object-cover" loading="lazy" decoding="async">
                                     <div class="p-6">
                                         <h3 class="text-xl font-bold my-2 text-accent-blue">DAYA 2026</h3>
                                         <p class="text-gray-400 mb-4">Daya is a legacy project of the Rotaract Club of INFO Institute of Engineering. Through this initiative, we have brought together 500+ orphaned children, engaging them in games and cultural activities. This project is not just a celebration, but a day dedicated to caring for and honoring these children. The true essence of Daya lies in its theme — Power of Mercy.</p>
@@ -337,7 +340,7 @@
                             <!-- Slide 2 -->
                             <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
                                 <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-                                    <img src="assets/images/projects/P-1.jpg" alt="STAR 2026" class="w-full h-48 object-cover">
+                                    <img src="assets/images/projects/P-1.jpg" alt="STAR 2026" class="w-full h-48 object-cover" loading="lazy" decoding="async">
                                     <div class="p-6">
                                         <h3 class="text-xl font-bold my-2 text-accent-blue">STAR 2026</h3>
                                         <p class="text-gray-400 mb-4">STAR is a fellowship trip organized by the Rotaract Club of INFO Institute of Engineering. It brings Rotaractors together to socialize, travel, and share joyful experiences beyond regular meetings. The event not only creates fun and relaxation but also strengthens connections, teamwork, and lasting friendships among members</p>
@@ -348,7 +351,7 @@
                             <!-- Slide 3 -->
                             <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
                                 <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-                                    <img src="assets/images/projects/p-3.jpg" alt="ROBO 2026" class="w-full h-48 object-cover">
+                                    <img src="assets/images/projects/p-3.jpg" alt="ROBO 2026" class="w-full h-48 object-cover" loading="lazy" decoding="async">
                                     <div class="p-6">
                                         <h3 class="text-xl font-bold my-2 text-accent-blue">ROBO 2026</h3>
                                         <p class="text-gray-400 mb-4">ROBO (Rise of Bright Opportunities) is a project of the Rotaract Club of INFO Institute of Engineering aimed at creating career opportunities for students and Rotaractors. Through this initiative, we organize a Job Fair that connects young talents with companies for placements and internships. The project helps participants explore career paths, gain professional exposure, and build a brighter future with new opportunities.</p>
@@ -381,7 +384,7 @@
                             <!-- Current Projects -->
                             <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
                                 <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-                                    <img src="assets/images/projects/p-2.jpg" alt="DAYA 2026" class="w-full object-cover">
+                                    <img src="assets/images/projects/p-2.jpg" alt="DAYA 2026" class="w-full object-cover" loading="lazy" decoding="async">
                                     <div class="p-6">
                                         <h3 class="text-xl font-bold my-2 text-accent-blue">DAYA 2026</h3>
                                         <p class="text-gray-400 mb-4">Daya is a legacy project of the Rotaract Club of INFO Institute of Engineering. Through this initiative, we have brought together 500+ orphaned children, engaging them in games and cultural activities. This project is not just a celebration, but a day dedicated to caring for and honoring these children. The true essence of Daya lies in its theme — Power of Mercy.</p>
@@ -391,7 +394,7 @@
                             </div>
                             <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
                                 <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-                                    <img src="assets/images/projects/P-1.jpg" alt="STAR 2026" class="w-full object-cover">
+                                    <img src="assets/images/projects/P-1.jpg" alt="STAR 2026" class="w-full object-cover" loading="lazy" decoding="async">
                                     <div class="p-6">
                                         <h3 class="text-xl font-bold my-2 text-accent-blue">STAR 2026</h3>
                                         <p class="text-gray-400 mb-4">STAR is a fellowship trip organized by the Rotaract Club of INFO Institute of Engineering. It brings Rotaractors together to socialize, travel, and share joyful experiences beyond regular meetings. The event not only creates fun and relaxation but also strengthens connections, teamwork, and lasting friendships among members</p>
@@ -401,7 +404,7 @@
                             </div>
                             <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
                                 <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-                                    <img src="assets/images/projects/p-3.jpg" alt="ROBO 2026" class="w-full object-cover">
+                                    <img src="assets/images/projects/p-3.jpg" alt="ROBO 2026" class="w-full object-cover" loading="lazy" decoding="async">
                                     <div class="p-6">
                                         <h3 class="text-xl font-bold my-2 text-accent-blue">ROBO 2026</h3>
                                         <p class="text-gray-400 mb-4">ROBO (Rise of Bright Opportunities) is a project of the Rotaract Club of INFO Institute of Engineering aimed at creating career opportunities for students and Rotaractors. Through this initiative, we organize a Job Fair that connects young talents with companies for placements and internships. The project helps participants explore career paths, gain professional exposure, and build a brighter future with new opportunities.</p>
@@ -422,7 +425,7 @@
                             <!-- Slide 1 -->
                             <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
                                 <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-                                    <img src="assets/images/projects/p-2.jpg" alt="DAYA 2026" class="w-full object-cover">
+                                    <img src="assets/images/projects/p-2.jpg" alt="DAYA 2026" class="w-full object-cover" loading="lazy" decoding="async">
                                     <div class="p-6">
                                         <h3 class="text-xl font-bold my-2 text-accent-blue">DAYA 2026</h3>
                                         <p class="text-gray-400 mb-4">An epic to provide enchanted scrolls and mentorship to young scribes in nearby villages.</p>
@@ -433,7 +436,7 @@
                             <!-- Slide 2 -->
                             <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
                                 <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-                                    <img src="https://placehold.co/400x250/00a9e0/ffffff?text=The+Cleansing+Flame" alt="The Cleansing Flame" class="w-full object-cover">
+                                    <img src="https://placehold.co/400x250/00a9e0/ffffff?text=The+Cleansing+Flame" alt="The Cleansing Flame" class="w-full object-cover" loading="lazy" decoding="async">
                                     <div class="p-6">
                                         <h3 class="text-xl font-bold my-2 text-accent-blue">The Cleansing Flame</h3>
                                         <p class="text-gray-400 mb-4">Regular crusades and awareness campaigns to purify the land and promote well-being.</p>
@@ -444,7 +447,7 @@
                             <!-- Slide 3 -->
                             <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
                                 <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-                                    <img src="https://placehold.co/400x250/005daa/ffffff?text=The+Forging+Series" alt="The Forging Series" class="w-full object-cover">
+                                    <img src="https://placehold.co/400x250/005daa/ffffff?text=The+Forging+Series" alt="The Forging Series" class="w-full object-cover" loading="lazy" decoding="async">
                                     <div class="p-6">
                                         <h3 class="text-xl font-bold my-2 text-accent-blue">The Forging Series</h3>
                                         <p class="text-gray-400 mb-4">Summoning master artisans and sages to share their wisdom and sharpen the skills of our clan.</p>
@@ -455,7 +458,7 @@
                             <!-- Slide 4 -->
                             <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
                                 <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-                                    <img src="https://placehold.co/400x250/00a9e0/ffffff?text=Mentorship+Drive" alt="Mentorship Drive" class="w-full object-cover">
+                                    <img src="https://placehold.co/400x250/00a9e0/ffffff?text=Mentorship+Drive" alt="Mentorship Drive" class="w-full object-cover" loading="lazy" decoding="async">
                                     <div class="p-6">
                                         <h3 class="text-xl font-bold my-2 text-accent-blue">Mentorship Drive</h3>
                                         <p class="text-gray-400 mb-4">A year-long mentorship program connecting seniors and alumni with students to build skills, confidence, and career clarity through guided sessions.</p>
@@ -466,7 +469,7 @@
                             <!-- Slide 5 -->
                             <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
                                 <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-                                    <img src="https://placehold.co/400x250/005daa/ffffff?text=Green+Earth" alt="Green Earth" class="w-full object-cover">
+                                    <img src="https://placehold.co/400x250/005daa/ffffff?text=Green+Earth" alt="Green Earth" class="w-full object-cover" loading="lazy" decoding="async">
                                     <div class="p-6">
                                         <h3 class="text-xl font-bold my-2 text-accent-blue">Green Earth</h3>
                                         <p class="text-gray-400 mb-4">Tree plantation and campus sustainability drives focusing on waste segregation, water conservation, and energy awareness campaigns.</p>
@@ -477,7 +480,7 @@
                             <!-- Slide 6 -->
                             <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
                                 <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-                                    <img src="https://placehold.co/400x250/00a9e0/ffffff?text=Health+Camp" alt="Community Health Camp" class="w-full object-cover">
+                                    <img src="https://placehold.co/400x250/00a9e0/ffffff?text=Health+Camp" alt="Community Health Camp" class="w-full object-cover" loading="lazy" decoding="async">
                                     <div class="p-6">
                                         <h3 class="text-xl font-bold my-2 text-accent-blue">Community Health Camp</h3>
                                         <p class="text-gray-400 mb-4">Periodic wellness checkups and health awareness sessions in collaboration with local hospitals benefiting nearby communities.</p>
@@ -488,7 +491,7 @@
                             <!-- Slide 7 -->
                             <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
                                 <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-                                    <img src="https://placehold.co/400x250/005daa/ffffff?text=Tech+Talks" alt="Tech Talks" class="w-full object-cover">
+                                    <img src="https://placehold.co/400x250/005daa/ffffff?text=Tech+Talks" alt="Tech Talks" class="w-full object-cover" loading="lazy" decoding="async">
                                     <div class="p-6">
                                         <h3 class="text-xl font-bold my-2 text-accent-blue">Tech Talks</h3>
                                         <p class="text-gray-400 mb-4">Monthly speaker series featuring industry experts on careers, innovation, entrepreneurship, and emerging technologies.</p>
@@ -499,7 +502,7 @@
                             <!-- Slide 8 -->
                             <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
                                 <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-                                    <img src="https://placehold.co/400x250/00a9e0/ffffff?text=Skill+Forge" alt="Skill Forge" class="w-full object-cover">
+                                    <img src="https://placehold.co/400x250/00a9e0/ffffff?text=Skill+Forge" alt="Skill Forge" class="w-full object-cover" loading="lazy" decoding="async">
                                     <div class="p-6">
                                         <h3 class="text-xl font-bold my-2 text-accent-blue">Skill Forge</h3>
                                         <p class="text-gray-400 mb-4">Hands-on workshops covering resume building, interview mastery, design thinking, and leadership through experiential learning.</p>
@@ -510,7 +513,7 @@
                             <!-- Slide 9 -->
                             <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
                                 <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-                                    <img src="https://placehold.co/400x250/005daa/ffffff?text=Entrepreneur+Bootcamp" alt="Entrepreneurship Bootcamp" class="w-full object-cover">
+                                    <img src="https://placehold.co/400x250/005daa/ffffff?text=Entrepreneur+Bootcamp" alt="Entrepreneurship Bootcamp" class="w-full object-cover" loading="lazy" decoding="async">
                                     <div class="p-6">
                                         <h3 class="text-xl font-bold my-2 text-accent-blue">Entrepreneurship Bootcamp</h3>
                                         <p class="text-gray-400 mb-4">Startup-focused workshops and mentorship to help students transform ideas into action with practical guidance.</p>
@@ -521,7 +524,7 @@
                             <!-- Slide 10 -->
                             <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
                                 <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-                                    <img src="https://placehold.co/400x250/00a9e0/ffffff?text=Cultural+Connect" alt="Cultural Connect" class="w-full object-cover">
+                                    <img src="https://placehold.co/400x250/00a9e0/ffffff?text=Cultural+Connect" alt="Cultural Connect" class="w-full object-cover" loading="lazy" decoding="async">
                                     <div class="p-6">
                                         <h3 class="text-xl font-bold my-2 text-accent-blue">Cultural Connect</h3>
                                         <p class="text-gray-400 mb-4">Inter-college cultural exchange and collaboration to celebrate diversity and strengthen community bonding.</p>
@@ -532,7 +535,7 @@
                             <!-- Slide 11 -->
                             <div class="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
                                 <div class="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
-                                    <img src="https://placehold.co/400x250/005daa/ffffff?text=Blood+Drive" alt="Blood Donation Drive" class="w-full object-cover">
+                                    <img src="https://placehold.co/400x250/005daa/ffffff?text=Blood+Drive" alt="Blood Donation Drive" class="w-full object-cover" loading="lazy" decoding="async">
                                     <div class="p-6">
                                         <h3 class="text-xl font-bold my-2 text-accent-blue">Blood Donation Drive</h3>
                                         <p class="text-gray-400 mb-4">Campus-wide blood donation awareness and collection in association with health partners and volunteers.</p>
@@ -1352,7 +1355,7 @@
                         const name = src.split('/').pop().split('.')[0].replace(/[-_]/g, ' ');
                         const slide = document.createElement('div');
                         slide.className = 'snap-start shrink-0 w-full md:w-2/3 lg:w-1/2 xl:w-1/3';
-                        slide.innerHTML = `<img src="${src}" alt="${name}" class="w-full h-72 md:h-96 object-cover rounded-lg border-2 border-primary-blue"/>`;
+                        slide.innerHTML = `<img src="${src}" alt="${name}" class="w-full h-72 md:h-96 object-cover rounded-lg border-2 border-primary-blue" loading="lazy" decoding="async"/>`;
                         track.appendChild(slide);
                     });
 
@@ -1401,7 +1404,7 @@
                         const name = src.split('/').pop().split('.')[0].replace(/[-_]/g, ' ');
                         const slide = document.createElement('div');
                         slide.className = 'snap-start shrink-0 w-full md:w-2/3 lg:w-1/2 xl:w-1/3';
-                        slide.innerHTML = `<img src="${src}" alt="${name}" class="w-full h-72 md:h-96 object-cover rounded-lg border-2 border-primary-blue"/>`;
+                        slide.innerHTML = `<img src="${src}" alt="${name}" class="w-full h-72 md:h-96 object-cover rounded-lg border-2 border-primary-blue" loading="lazy" decoding="async"/>`;
                         track.appendChild(slide);
                     });
 
@@ -1445,7 +1448,7 @@
                 stones.sort((a,b)=>a.slot-b.slot).forEach(s => {
                     const wrap = document.createElement('div');
                     wrap.className = 'flex-shrink-0 w-80 aspect-[4/5] bg-dark-secondary p-2 rounded-lg overflow-hidden';
-                    wrap.innerHTML = `<img class="h-full w-full object-cover rounded-lg" src="${s.src}" alt="${s.title || ''}">`;
+                    wrap.innerHTML = `<img class="h-full w-full object-cover rounded-lg" src="${s.src}" alt="${s.title || ''}" loading="lazy" decoding="async">`;
                     track.appendChild(wrap);
                 });
             } catch (e) {
@@ -1459,7 +1462,7 @@
                 ];
                 const track = document.getElementById('power-stones-track');
                 if (!track) return;
-                track.innerHTML = fallback.map(s => `<div class="flex-shrink-0 w-80 aspect-[4/5] bg-dark-secondary p-2 rounded-lg overflow-hidden"><img class=\"w-full h-full object-cover rounded-lg\" src=\"${s.src}\" alt=\"\"></div>`).join('');
+                track.innerHTML = fallback.map(s => `<div class="flex-shrink-0 w-80 aspect-[4/5] bg-dark-secondary p-2 rounded-lg overflow-hidden"><img class=\"w-full h-full object-cover rounded-lg\" src=\"${s.src}\" alt=\"\" loading=\"lazy\" decoding=\"async\"></div>`).join('');
             }
         }
 
