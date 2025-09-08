@@ -12,6 +12,15 @@ require('dotenv').config();
 const app = express();
 app.use(express.json({ limit: '1mb' }));
 
+// CORS for cross-origin frontend
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  next();
+});
+
 // Normalize Vercel rewrite path: /api/(.*) -> /api/index/$1
 // This lets existing '/api/...' routes keep working when the function is '/api/index.js'.
 app.use((req, res, next) => {

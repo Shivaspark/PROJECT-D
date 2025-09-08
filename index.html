@@ -47,6 +47,28 @@
 <body class="bg-dark-bg text-light-text">
   <div id="root"></div>
 
+  <script>
+    (function(){
+      var host = location.hostname;
+      var API_BASE = (host === 'racinfo.in' || host === 'www.racinfo.in') ? 'https://bf9469a66fa84a01a25a648fb5139f34-3f8e6b31-1ae1-4506-a3b7-7cbde4.fly.dev' : '';
+      window.__API_BASE = API_BASE;
+      if (API_BASE) {
+        var _fetch = window.fetch;
+        window.fetch = function(input, init){
+          try {
+            var url = (typeof input === 'string') ? input : (input && input.url);
+            if (url && typeof url === 'string' && url.indexOf('/api/') === 0) {
+              var full = API_BASE + url;
+              if (typeof input === 'string') return _fetch(full, init);
+              try { return _fetch(new Request(full, input), init); } catch { return _fetch(full, init); }
+            }
+          } catch {}
+          return _fetch(input, init);
+        };
+      }
+    })();
+  </script>
+
   <script type="text/babel">
     const { useEffect, useRef, useState, Fragment, useCallback } = React;
 
@@ -554,7 +576,7 @@
       const [cards, setCards] = useState([]);
       const [flipped, setFlipped] = useState([]);
       const [matched, setMatched] = useState([]);
-      const emojis = ['🐉','🛡️','⚔️','🧙‍♂️','🪄','🏹','🪙','🧿'];
+      const emojis = ['🐉','🛡️','⚔��','🧙‍♂️','🪄','🏹','🪙','🧿'];
       useEffect(()=>{
         if(!open) return;
         const deck = [...emojis, ...emojis].map((v,i)=>({ id:i, v })).sort(()=>Math.random()-0.5);

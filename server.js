@@ -12,6 +12,15 @@ const PORT = process.env.PORT || 8081;
 
 app.use(express.json({ limit: '1mb' }));
 
+// CORS for cross-origin frontend
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  next();
+});
+
 // Upload configuration
 const uploadDir = path.join(__dirname, 'assets', 'images', 'projects');
 fs.mkdirSync(uploadDir, { recursive: true });
