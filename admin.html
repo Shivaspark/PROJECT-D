@@ -44,7 +44,12 @@
   <header class="bg-dark-secondary border-b border-gray-800">
     <div class="container mx-auto px-6 py-4 flex items-center justify-between">
       <h1 class="text-xl font-heading font-black">Admin • Manage Projects</h1>
-      <a href="/" class="text-accent-blue hover:text-white">← Back to site</a>
+      <div class="flex items-center gap-3">
+        <span id="auth-status" class="text-xs text-gray-400 hidden">Signed out</span>
+        <button id="btn-signin" class="bg-primary-blue text-white px-3 py-1 rounded-full hover:bg-accent-blue transition">Sign in</button>
+        <button id="btn-signout" class="hidden bg-gray-700 text-white px-3 py-1 rounded-full hover:bg-gray-600 transition">Sign out</button>
+        <a href="/" class="text-accent-blue hover:text-white">← Back to site</a>
+      </div>
     </div>
   </header>
 
@@ -221,6 +226,28 @@
       const p = prompt('Admin password');
       if (p === null) return;
       sessionStorage.setItem('adminAuth', btoa(u + ':' + p));
+    }
+    async function isAuthed() {
+      try {
+        const res = await fetch('/api/highlights/admin', { headers: { ...getAuthHeader() } });
+        return res.status !== 401;
+      } catch { return false; }
+    }
+    async function updateAuthUI() {
+      const ok = await isAuthed();
+      const status = document.getElementById('auth-status');
+      const btnIn = document.getElementById('btn-signin');
+      const btnOut = document.getElementById('btn-signout');
+      status.classList.remove('hidden');
+      if (ok) {
+        status.textContent = 'Signed in';
+        btnIn.classList.add('hidden');
+        btnOut.classList.remove('hidden');
+      } else {
+        status.textContent = 'Signed out';
+        btnOut.classList.add('hidden');
+        btnIn.classList.remove('hidden');
+      }
     }
 
     function projectRowHTML(p) {
@@ -685,6 +712,9 @@
       attachBulletinHandlers();
       document.getElementById('hl-viewer-close').addEventListener('click', closeHighlightViewer);
       document.getElementById('hl-viewer').addEventListener('click', (e) => { if (e.target.id === 'hl-viewer') closeHighlightViewer(); });
+      document.getElementById('btn-signin').addEventListener('click', async () => { await ensureAuthIfNeeded(true); await updateAuthUI(); await refreshAdminList(); await refreshHighlightsList(); await refreshPsList(); await refreshBulletinsList(); });
+      document.getElementById('btn-signout').addEventListener('click', async () => { sessionStorage.removeItem('adminAuth'); await updateAuthUI(); });
+      updateAuthUI();
     });
   </script>
 
