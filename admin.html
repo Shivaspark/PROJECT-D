@@ -316,7 +316,11 @@
         const id = e.currentTarget.getAttribute('data-id');
         if (!confirm('Delete this project?')) return;
         await ensureAuthIfNeeded();
-        const res = await fetch(`/api/projects/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
+        let res = await fetch(`/api/projects/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
+        if (!res.ok) {
+          // Fallback for hosts blocking DELETE
+          res = await fetch('/api/projects/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify({ id }) });
+        }
         if (!res.ok) {
           const t = await res.text();
           alert('Delete failed: ' + t);
