@@ -301,7 +301,7 @@
 
     async function refreshAdminList() {
       const list = document.getElementById('projects-list');
-      const res = await fetch('/api/projects');
+      const res = await fetch('/api/projects', { cache: 'no-store' });
       const { projects } = await res.json();
       const existing = projects.filter(p => (p.type === 'existing' || p.type === 'flagship'));
       const upcoming = projects.filter(p => p.type === 'upcoming');
