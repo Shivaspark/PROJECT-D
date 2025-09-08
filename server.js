@@ -539,6 +539,33 @@ app.delete('/api/projects/:id', basicAuth, async (req, res) => {
   }
 });
 
+// Fallback endpoints for hosts blocking PUT/DELETE
+app.post('/api/projects/update', basicAuth, async (req, res) => {
+  try {
+    const { id, title, description, image, type } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const updated = await dbUpdateProject(id, { title, description, image, type });
+    if (!updated) return res.status(404).json({ error: 'Not found' });
+    res.set('Cache-Control', 'no-store');
+    res.json({ project: updated });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to update' });
+  }
+});
+
+app.post('/api/projects/delete', basicAuth, async (req, res) => {
+  try {
+    const { id } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const ok = await dbDeleteProject(id);
+    if (!ok) return res.status(404).json({ error: 'Not found' });
+    res.set('Cache-Control', 'no-store');
+    res.json({ deleted: true, id });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to delete' });
+  }
+});
+
 // Import projects from local JSON into the active provider (MongoDB if configured)
 async function importFromLocalToActiveProvider() {
   const source = readDb();
