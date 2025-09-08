@@ -203,7 +203,7 @@ async function dbDeleteProject(id) {
 }
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'RAC IIE.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 // Admin page (HTML only). Publicly viewable; admin actions stay protected via API.
@@ -391,7 +391,7 @@ app.get('/api/bulletins', async (req, res) => {
       if (latest) return res.json({ latest, archives });
     }
     const defaults = {
-      ta: [{ id: 'ta-1', lang: 'ta', title: 'தமிழ் பதிப்பு', date: '2025-08-01', pdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
+      ta: [{ id: 'ta-1', lang: 'ta', title: 'தமிழ் பதி���்பு', date: '2025-08-01', pdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
       en: [{ id: 'en-1', lang: 'en', title: 'English Edition', date: '2025-08-01', pdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
       kn: [{ id: 'kn-1', lang: 'kn', title: 'Kannada Edition', date: '2025-08-01', pdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
       ml: [{ id: 'ml-1', lang: 'ml', title: 'Malayalam Edition', date: '2025-08-01', pdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
