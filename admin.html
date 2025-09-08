@@ -250,15 +250,17 @@
       }
     }
 
+    function absAsset(u){ if(!u) return u; if(window.__API_BASE && /^assets\//.test(u)) return window.__API_BASE + '/' + u; return u; }
     function projectRowHTML(p) {
       const type = p.type === 'flagship' ? 'existing' : p.type;
       const rowAccent = type === 'existing' ? 'border-gray-500' : 'border-primary-blue';
       const badge = type === 'existing'
         ? '<span class="ml-2 text-[10px] uppercase tracking-wide bg-gray-600/20 text-gray-300 border border-gray-500 px-2 py-0.5 rounded-full">Existing</span>'
         : '<span class="ml-2 text-[10px] uppercase tracking-wide bg-primary-blue/20 text-primary-blue border border-primary-blue px-2 py-0.5 rounded-full">Upcoming</span>';
+      const src = absAsset(p.image);
       return `
         <div class="project-row border-l-4 ${rowAccent} border border-gray-700 rounded p-3 flex flex-col md:flex-row md:items-start gap-3 cursor-pointer hover:bg-dark-bg/40" data-id="${p.id}">
-          <img src="${p.image}" alt="${p.title}" class="w-24 h-16 object-cover rounded border border-gray-600"/>
+          <img src="${src}" alt="${p.title}" class="w-24 h-16 object-cover rounded border border-gray-600"/>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2"><div class="text-accent-blue font-semibold truncate">${p.title}</div>${badge}</div>
             <div class="text-gray-400 text-sm break-words whitespace-normal overflow-hidden">${p.description}</div>
@@ -274,7 +276,8 @@
     function setPreview(url){
       const preview = document.getElementById('pf-preview');
       if (!preview) return;
-      if (url) { preview.src = url; preview.classList.remove('hidden'); }
+      const src = absAsset(url);
+      if (src) { preview.src = src; preview.classList.remove('hidden'); }
       else { preview.src=''; preview.classList.add('hidden'); }
     }
     function prefillForm(item) {
@@ -372,7 +375,8 @@
           imageInput.value = data.url;
           setPreview(data.url);
         } else {
-          alert(data.error || 'Upload failed');
+          const msg = (data && data.error) ? data.error : 'Upload failed';
+          alert(msg);
         }
         fileInput.value = '';
       });
