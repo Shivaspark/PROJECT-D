@@ -12,6 +12,14 @@ require('dotenv').config();
 const app = express();
 app.use(express.json({ limit: '1mb' }));
 
+// Normalize Vercel rewrite path: /api/(.*) -> /api/index/$1
+// This lets existing '/api/...' routes keep working when the function is '/api/index.js'.
+app.use((req, res, next) => {
+  if (req.url === '/api/index') req.url = '/api';
+  else if (req.url.startsWith('/api/index/')) req.url = req.url.replace(/^\/api\/index\//, '/api/');
+  next();
+});
+
 // Helpers
 function basicAuth(req, res, next) {
   const header = req.headers['authorization'] || '';
