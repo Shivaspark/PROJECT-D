@@ -110,8 +110,16 @@ async function dbGetProjects(type) {
   const col = await ensureMongo();
   if (col) {
     const query = allowed.has(type) ? { type } : {};
-    const items = await col.find(query).sort({ title: 1 }).toArray();
-    return items.map(({ id, type, title, description, image }) => ({ id, type, title, description, image }));
+    const items = await col
+      .find(query)
+      .project({ _id: 0, id: 1, type: 1, title: 1, description: 1, image: 1 })
+      .sort({ title: 1 })
+      .toArray();
+    if (items && items.length) return items;
+    const local = readDb();
+    let fallbacks = Array.isArray(local.projects) ? local.projects : [];
+    if (allowed.has(type)) fallbacks = fallbacks.filter(p => p.type === type);
+    return fallbacks;
   } else {
     const db = readDb();
     let items = db.projects || [];
