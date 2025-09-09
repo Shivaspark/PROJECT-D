@@ -18,12 +18,38 @@
       }
     }
   </script>
+  <script>
+    (function(){
+      var host = location.hostname;
+      var API_BASE = (host === 'racinfo.in' || host === 'www.racinfo.in') ? 'https://bf9469a66fa84a01a25a648fb5139f34-3f8e6b31-1ae1-4506-a3b7-7cbde4.fly.dev' : '';
+      window.__API_BASE = API_BASE;
+      if (API_BASE) {
+        var _fetch = window.fetch;
+        window.fetch = function(input, init){
+          try {
+            var url = (typeof input === 'string') ? input : (input && input.url);
+            if (url && typeof url === 'string' && url.indexOf('/api/') === 0) {
+              var full = API_BASE + url;
+              if (typeof input === 'string') return _fetch(full, init);
+              try { return _fetch(new Request(full, input), init); } catch { return _fetch(full, init); }
+            }
+          } catch {}
+          return _fetch(input, init);
+        };
+      }
+    })();
+  </script>
 </head>
 <body class="bg-dark-bg text-light-text min-h-screen">
   <header class="bg-dark-secondary border-b border-gray-800">
     <div class="container mx-auto px-6 py-4 flex items-center justify-between">
       <h1 class="text-xl font-heading font-black">Admin • Manage Projects</h1>
-      <a href="/" class="text-accent-blue hover:text-white">← Back to site</a>
+      <div class="flex items-center gap-3">
+        <span id="auth-status" class="text-xs text-gray-400 hidden">Signed out</span>
+        <button id="btn-signin" class="bg-primary-blue text-white px-3 py-1 rounded-full hover:bg-accent-blue transition">Sign in</button>
+        <button id="btn-signout" class="hidden bg-gray-700 text-white px-3 py-1 rounded-full hover:bg-gray-600 transition">Sign out</button>
+        <a href="/" class="text-accent-blue hover:text-white">← Back to site</a>
+      </div>
     </div>
   </header>
 
@@ -201,16 +227,40 @@
       if (p === null) return;
       sessionStorage.setItem('adminAuth', btoa(u + ':' + p));
     }
+    async function isAuthed() {
+      try {
+        const res = await fetch('/api/highlights/admin', { headers: { ...getAuthHeader() } });
+        return res.status !== 401;
+      } catch { return false; }
+    }
+    async function updateAuthUI() {
+      const ok = await isAuthed();
+      const status = document.getElementById('auth-status');
+      const btnIn = document.getElementById('btn-signin');
+      const btnOut = document.getElementById('btn-signout');
+      status.classList.remove('hidden');
+      if (ok) {
+        status.textContent = 'Signed in';
+        btnIn.classList.add('hidden');
+        btnOut.classList.remove('hidden');
+      } else {
+        status.textContent = 'Signed out';
+        btnOut.classList.add('hidden');
+        btnIn.classList.remove('hidden');
+      }
+    }
 
+    function absAsset(u){ if(!u) return u; if(window.__API_BASE && /^assets\//.test(u)) return window.__API_BASE + '/' + u; return u; }
     function projectRowHTML(p) {
       const type = p.type === 'flagship' ? 'existing' : p.type;
       const rowAccent = type === 'existing' ? 'border-gray-500' : 'border-primary-blue';
       const badge = type === 'existing'
         ? '<span class="ml-2 text-[10px] uppercase tracking-wide bg-gray-600/20 text-gray-300 border border-gray-500 px-2 py-0.5 rounded-full">Existing</span>'
         : '<span class="ml-2 text-[10px] uppercase tracking-wide bg-primary-blue/20 text-primary-blue border border-primary-blue px-2 py-0.5 rounded-full">Upcoming</span>';
+      const src = absAsset(p.image);
       return `
         <div class="project-row border-l-4 ${rowAccent} border border-gray-700 rounded p-3 flex flex-col md:flex-row md:items-start gap-3 cursor-pointer hover:bg-dark-bg/40" data-id="${p.id}">
-          <img src="${p.image}" alt="${p.title}" class="w-24 h-16 object-cover rounded border border-gray-600"/>
+          <img src="${src}" alt="${p.title}" class="w-24 h-16 object-cover rounded border border-gray-600"/>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2"><div class="text-accent-blue font-semibold truncate">${p.title}</div>${badge}</div>
             <div class="text-gray-400 text-sm break-words whitespace-normal overflow-hidden">${p.description}</div>
@@ -226,7 +276,8 @@
     function setPreview(url){
       const preview = document.getElementById('pf-preview');
       if (!preview) return;
-      if (url) { preview.src = url; preview.classList.remove('hidden'); }
+      const src = absAsset(url);
+      if (src) { preview.src = src; preview.classList.remove('hidden'); }
       else { preview.src=''; preview.classList.add('hidden'); }
     }
     function prefillForm(item) {
@@ -250,7 +301,7 @@
 
     async function refreshAdminList() {
       const list = document.getElementById('projects-list');
-      const res = await fetch('/api/projects');
+      const res = await fetch('/api/projects', { cache: 'no-store' });
       const { projects } = await res.json();
       const existing = projects.filter(p => (p.type === 'existing' || p.type === 'flagship'));
       const upcoming = projects.filter(p => p.type === 'upcoming');
@@ -265,7 +316,7 @@
         const id = e.currentTarget.getAttribute('data-id');
         if (!confirm('Delete this project?')) return;
         await ensureAuthIfNeeded();
-        const res = await fetch(`/api/projects/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
+        let res = await fetch('/api/projects/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify({ id }) });
         if (!res.ok) {
           const t = await res.text();
           alert('Delete failed: ' + t);
@@ -324,7 +375,8 @@
           imageInput.value = data.url;
           setPreview(data.url);
         } else {
-          alert(data.error || 'Upload failed');
+          const msg = (data && data.error) ? data.error : 'Upload failed';
+          alert(msg);
         }
         fileInput.value = '';
       });
@@ -347,7 +399,8 @@
         await ensureAuthIfNeeded();
         let res;
         if (editId) {
-          res = await fetch(`/api/projects/${editId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
+          // Use POST fallback to avoid proxies blocking PUT
+          res = await fetch('/api/projects/update', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify({ id: editId, ...payload }) });
         } else {
           res = await fetch('/api/projects', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
         }
@@ -428,7 +481,7 @@
       }));
       list.querySelectorAll('.btn-hl-delete').forEach(btn => btn.addEventListener('click', async (e) => {
         e.stopPropagation(); const id = e.currentTarget.getAttribute('data-id'); if (!confirm('Delete this highlight?')) return; await ensureAuthIfNeeded(true);
-        const r = await fetch(`/api/highlights/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
+        const r = await fetch('/api/highlights/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify({ id }) });
         if (!r.ok) { const t = await r.text(); alert('Delete failed: ' + t); return; }
         await refreshHighlightsList();
       }));
@@ -538,8 +591,8 @@
         }));
         list.querySelectorAll('.btn-ps-delete').forEach(btn => btn.addEventListener('click', async (e) => {
           e.stopPropagation(); const id = e.currentTarget.getAttribute('data-id'); if (!confirm('Delete this poster?')) return; await ensureAuthIfNeeded(true);
-          const r = await fetch(`/api/power-stones/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
-          if (!r.ok) { alert('Delete failed'); return; }
+          const r = await fetch('/api/power-stones/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify({ id }) });
+          if (!r.ok) { const t = await r.text(); alert('Delete failed: ' + t); return; }
           await refreshPsList();
         }));
       } else if (res.status !== 503) {
@@ -619,7 +672,7 @@
       list.innerHTML = bulletins.map(bulletinRowHTML).join('');
       list.querySelectorAll('.btn-bul-delete').forEach(btn => btn.addEventListener('click', async (e) => {
         e.stopPropagation(); const id = e.currentTarget.getAttribute('data-id'); if (!confirm('Delete this document?')) return; await ensureAuthIfNeeded(true);
-        const r = await fetch(`/api/bulletins/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
+        const r = await fetch('/api/bulletins/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify({ id }) });
         if (!r.ok) { const t = await r.text(); alert('Delete failed: ' + t); return; }
         await refreshBulletinsList();
       }));
@@ -664,6 +717,9 @@
       attachBulletinHandlers();
       document.getElementById('hl-viewer-close').addEventListener('click', closeHighlightViewer);
       document.getElementById('hl-viewer').addEventListener('click', (e) => { if (e.target.id === 'hl-viewer') closeHighlightViewer(); });
+      document.getElementById('btn-signin').addEventListener('click', async () => { await ensureAuthIfNeeded(true); await updateAuthUI(); await refreshAdminList(); await refreshHighlightsList(); await refreshPsList(); await refreshBulletinsList(); });
+      document.getElementById('btn-signout').addEventListener('click', async () => { sessionStorage.removeItem('adminAuth'); await updateAuthUI(); });
+      updateAuthUI();
     });
   </script>
 
