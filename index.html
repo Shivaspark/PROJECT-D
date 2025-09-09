@@ -415,6 +415,7 @@
         return () => { alive = false; };
       }, [active]);
       const proxied = latest && latest.pdf ? `/api/pdf-proxy?url=${encodeURIComponent(latest.pdf)}` : '';
+      function fmtDate(s){ try { const d = new Date(s); return d.toLocaleDateString(undefined,{year:'numeric',month:'long',day:'2-digit'}); } catch { return s||''; } }
       return (
         <section id="bulletin" className="py-20 bg-dark-bg">
           <div className="container mx-auto px-6">
@@ -448,13 +449,13 @@
               <div className="bg-dark-secondary p-6 rounded-lg border border-gray-700">
                 <h3 className="text-2xl font-bold text-accent-blue mb-4">Archives</h3>
                 <ul className="space-y-3">
-                  {archives.map(a => (
+                  {[...(latest? [latest] : []), ...archives].map(a => (
                     <li key={a.id} className="flex items-center justify-between gap-3">
                       <a href={a.pdf} target="_blank" rel="noreferrer" className="text-primary-blue hover:text-accent-blue font-semibold truncate">{a.title || a.pdf}</a>
-                      <span className="text-xs text-gray-400 whitespace-nowrap">{a.date}</span>
+                      <span className="text-xs text-gray-400 whitespace-nowrap">{fmtDate(a.date)}</span>
                     </li>
                   ))}
-                  {!archives.length && <li className="text-sm text-gray-400">No archives</li>}
+                  {!latest && !archives.length && <li className="text-sm text-gray-400">No archives</li>}
                 </ul>
               </div>
             </div>
