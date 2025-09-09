@@ -626,7 +626,7 @@
       );
     }
 
-    function WhackGame({ open, onClose }) {
+    function WhackGame({ open, onClose, onGameOver }) {
       const [score, setScore] = useState(0);
       const [time, setTime] = useState(30);
       const [up, setUp] = useState(-1);
