@@ -534,7 +534,7 @@
             if(head.x<0) head.x = maxX; if(head.x>maxX) head.x = 0; if(head.y<0) head.y = maxY; if(head.y>maxY) head.y = 0;
             if(stateRef.current.snake.some((s,i)=> i>0 && s.x===head.x && s.y===head.y)) { stateRef.current.alive=false; onClose(); return; }
             stateRef.current.snake.unshift(head);
-            if(head.x===stateRef.current.food.x && head.y===stateRef.current.food.y){ setScore(v=>v+1); placeFood(); }
+            if(head.x===stateRef.current.food.x && head.y===stateRef.current.food.y){ setScore(v=>{ const nv = v+1; scoreRef.current = nv; return nv; }); placeFood(); }
             else { stateRef.current.snake.pop(); }
           }
           ctx.fillStyle = '#111827'; ctx.fillRect(0,0,canvasRef.current.width, canvasRef.current.height);
