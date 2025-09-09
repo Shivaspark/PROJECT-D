@@ -316,11 +316,7 @@
         const id = e.currentTarget.getAttribute('data-id');
         if (!confirm('Delete this project?')) return;
         await ensureAuthIfNeeded();
-        let res = await fetch(`/api/projects/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
-        if (!res.ok) {
-          // Fallback for hosts blocking DELETE
-          res = await fetch('/api/projects/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify({ id }) });
-        }
+        let res = await fetch('/api/projects/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify({ id }) });
         if (!res.ok) {
           const t = await res.text();
           alert('Delete failed: ' + t);
@@ -403,11 +399,8 @@
         await ensureAuthIfNeeded();
         let res;
         if (editId) {
-          res = await fetch(`/api/projects/${editId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
-          if (!res.ok) {
-            // Fallback for hosts blocking PUT
-            res = await fetch('/api/projects/update', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify({ id: editId, ...payload }) });
-          }
+          // Use POST fallback to avoid proxies blocking PUT
+          res = await fetch('/api/projects/update', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify({ id: editId, ...payload }) });
         } else {
           res = await fetch('/api/projects', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
         }
