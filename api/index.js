@@ -281,6 +281,38 @@ app.delete('/api/highlights/:id', basicAuth, async (req, res) => {
   }
 });
 
+// Fallback: update highlight via POST
+app.post('/api/highlights/update', basicAuth, async (req, res) => {
+  try {
+    const { id, src, title, order } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const col = await ensureHighlights();
+    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    const exists = await col.findOne({ id });
+    if (!exists) return res.status(404).json({ error: 'Not found' });
+    const update = {};
+    if (typeof src === 'string') update.src = src.trim();
+    if (typeof title === 'string') update.title = title;
+    if (Number.isFinite(order)) update.order = order;
+    await col.updateOne({ id }, { $set: update });
+    const updated = await col.findOne({ id }, { projection: { _id: 0 } });
+    return res.json({ highlight: updated });
+  } catch (e) { return res.status(500).json({ error: 'Failed to update highlight' }); }
+});
+
+// Fallback: delete highlight via POST
+app.post('/api/highlights/delete', basicAuth, async (req, res) => {
+  try {
+    const { id } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const col = await ensureHighlights();
+    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    const { deletedCount } = await col.deleteOne({ id });
+    if (!deletedCount) return res.status(404).json({ error: 'Not found' });
+    return res.json({ deleted: true, id });
+  } catch (e) { return res.status(500).json({ error: 'Failed to delete highlight' }); }
+});
+
 app.get('/api/power-stones', async (req, res) => {
   try {
     const col = await ensurePowerStones();
