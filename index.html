@@ -477,7 +477,26 @@
       );
     }
 
-    function SnakeGame({ open, onClose }) {
+    function NicknameModal({ open, onClose, onSave }) {
+      const [name, setName] = useState('');
+      useEffect(()=>{ if(open){ const saved = localStorage.getItem('gameNick')||''; setName(saved); } }, [open]);
+      if(!open) return null;
+      return (
+        <Modal open={open} onClose={onClose}>
+          <div className="bg-dark-secondary p-6 rounded-lg shadow-lg border-2 border-primary-blue w-full max-w-md mx-4 text-center">
+            <h3 className="text-2xl font-bold text-accent-blue mb-2">Enter Nickname</h3>
+            <p className="text-gray-300 text-sm mb-4">This will appear on the leaderboard.</p>
+            <input value={name} onChange={(e)=>setName(e.target.value)} maxLength={24} className="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="Nickname" />
+            <div className="mt-4 flex gap-3 justify-center">
+              <button onClick={onClose} className="bg-gray-700 text-white px-4 py-2 rounded-full hover:bg-gray-600">Cancel</button>
+              <button onClick={()=>{ const v = (name||'').trim(); if(v.length<2){ alert('Nickname must be at least 2 characters'); return; } localStorage.setItem('gameNick', v); onSave(v); }} className="bg-primary-blue text-white px-5 py-2 rounded-full hover:bg-accent-blue">Save</button>
+            </div>
+          </div>
+        </Modal>
+      );
+    }
+
+    function SnakeGame({ open, onClose, onGameOver }) {
       const canvasRef = useRef(null);
       const [score, setScore] = useState(0);
       const dirRef = useRef({ x: 1, y: 0 });
