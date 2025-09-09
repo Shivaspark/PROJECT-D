@@ -396,7 +396,7 @@ app.get('/api/bulletins', async (req, res) => {
       const items = await col.find({ lang }).sort({ date: -1, createdAt: -1 }).project({ _id: 0 }).toArray();
       const latest = items[0] || null;
       const archives = items.slice(1).map(({ id, title, date, pdf, lang }) => ({ id, title, date, pdf, lang }));
-      if (latest) return res.json({ latest, archives });
+      if (latest) { res.set('Cache-Control','no-store'); return res.json({ latest, archives }); }
     }
     const defaults = {
       ta: [{ id: 'ta-1', lang: 'ta', title: 'தமிழ் பதிப்பு', date: '2025-08-01', pdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
@@ -406,6 +406,7 @@ app.get('/api/bulletins', async (req, res) => {
       te: [{ id: 'te-1', lang: 'te', title: 'Telugu Edition', date: '2025-08-01', pdf: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' }],
     };
     const arr = defaults[lang] || defaults.ta;
+    res.set('Cache-Control','no-store');
     return res.json({ latest: arr[0], archives: [] });
   } catch (e) {
     return res.status(500).json({ error: 'Failed to load bulletins' });
@@ -417,6 +418,7 @@ app.get('/api/bulletins/admin', basicAuth, async (req, res) => {
     const col = await ensureBulletins();
     if (!col) return res.status(503).json({ error: 'Database not configured' });
     const items = await col.find({}).sort({ date: -1, createdAt: -1 }).project({ _id: 0 }).toArray();
+    res.set('Cache-Control','no-store');
     return res.json({ bulletins: items });
   } catch (e) {
     return res.status(500).json({ error: 'Failed to load bulletins' });
