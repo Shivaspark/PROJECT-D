@@ -407,7 +407,7 @@ app.get('/api/bulletins', async (req, res) => {
     };
     const arr = defaults[lang] || defaults.ta;
     res.set('Cache-Control','no-store');
-    return res.json({ latest: arr[0], archives: [] });
+    return res.json({ latest: arr[0], archives: arr.slice(1) });
   } catch (e) {
     return res.status(500).json({ error: 'Failed to load bulletins' });
   }
