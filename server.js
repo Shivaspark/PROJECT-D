@@ -428,6 +428,19 @@ app.delete('/api/power-stones/:id', basicAuth, async (req, res) => {
   }
 });
 
+// Fallback: delete stone via POST
+app.post('/api/power-stones/delete', basicAuth, async (req, res) => {
+  try {
+    const { id } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const col = await ensurePowerStones();
+    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    const { deletedCount } = await col.deleteOne({ id });
+    if (!deletedCount) return res.status(404).json({ error: 'Not found' });
+    return res.json({ deleted: true, id });
+  } catch (e) { return res.status(500).json({ error: 'Failed to delete stone' }); }
+});
+
 // Bulletins API
 app.get('/api/bulletins', async (req, res) => {
   try {
