@@ -661,7 +661,7 @@
       );
     }
 
-    function FlightGame({ open, onClose }) {
+    function FlightGame({ open, onClose, onGameOver }) {
       const canvasRef = useRef(null);
       const [time, setTime] = useState(0);
       const rafRef = useRef(null);
