@@ -408,7 +408,7 @@
       const [archives, setArchives] = useState([]);
       useEffect(() => {
         let alive = true;
-        fetch(`/api/bulletins?lang=${encodeURIComponent(active)}`)
+        fetch(`/api/bulletins?lang=${encodeURIComponent(active)}`, { cache: 'no-store' })
           .then(r => r.json())
           .then(({ latest, archives }) => { if (!alive) return; setLatest(latest||null); setArchives(Array.isArray(archives)?archives:[]); })
           .catch(() => { if (!alive) return; setLatest(null); setArchives([]); });
