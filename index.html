@@ -509,6 +509,7 @@
         stateRef.current = { grid: 20, snake: [{x:10,y:10}], food: {x:15,y:10}, alive: true, t: 0 };
         dirRef.current = { x: 1, y: 0 };
         setScore(0);
+        scoreRef.current = 0;
       },[]);
 
       useEffect(()=>{ if(open) restart(); },[open,restart]);
