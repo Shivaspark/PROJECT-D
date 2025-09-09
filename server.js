@@ -75,6 +75,7 @@ let projectsCol = null;
 let highlightsCol = null;
 let powerStonesCol = null;
 let bulletinsCol = null;
+let leaderboardCol = null;
 
 async function ensureMongo() {
   if (projectsCol) return projectsCol;
@@ -144,6 +145,22 @@ async function ensureBulletins() {
     } catch (e) {}
   }
   return bulletinsCol;
+}
+
+async function ensureLeaderboard() {
+  if (!mongoDb) {
+    const col = await ensureMongo();
+    if (!col) return null;
+  }
+  if (!leaderboardCol) {
+    leaderboardCol = mongoDb.collection('leaderboard');
+    try {
+      await leaderboardCol.createIndex({ game: 1, score: -1 });
+      await leaderboardCol.createIndex({ createdAt: -1 });
+      await leaderboardCol.createIndex({ nickname: 1 });
+    } catch (e) {}
+  }
+  return leaderboardCol;
 }
 
 async function dbGetProjects(type) {
@@ -520,6 +537,45 @@ app.post('/api/bulletins/delete', basicAuth, async (req, res) => {
     if (!deletedCount) return res.status(404).json({ error: 'Not found' });
     return res.json({ deleted: true, id });
   } catch (e) { return res.status(500).json({ error: 'Failed to delete bulletin' }); }
+});
+
+// Leaderboard API
+app.get('/api/leaderboard', async (req, res) => {
+  try {
+    const col = await ensureLeaderboard();
+    const limit = Math.min(Math.max(parseInt(req.query.limit || '10', 10) || 10, 1), 100);
+    const game = typeof req.query.game === 'string' ? req.query.game.trim().toLowerCase() : '';
+    if (col) {
+      const query = game ? { game } : {};
+      const items = await col.find(query).sort({ score: -1, createdAt: -1 }).limit(limit).project({ _id: 0 }).toArray();
+      return res.json({ entries: items });
+    } else {
+      return res.json({ entries: [] });
+    }
+  } catch (e) {
+    return res.status(500).json({ entries: [], error: 'Failed to load leaderboard' });
+  }
+});
+
+app.post('/api/leaderboard', async (req, res) => {
+  try {
+    const { game, nickname, score } = req.body || {};
+    const G = new Set(['snake','whack','flight','memory']);
+    const g = (game || '').toString().trim().toLowerCase();
+    const name = (nickname || '').toString().trim().slice(0, 24);
+    const sc = Number(score);
+    if (!G.has(g)) return res.status(400).json({ error: 'invalid game' });
+    if (!name || name.length < 2) return res.status(400).json({ error: 'invalid nickname' });
+    if (!Number.isFinite(sc) || sc < 0 || sc > 1000000) return res.status(400).json({ error: 'invalid score' });
+    const col = await ensureLeaderboard();
+    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    const doc = { id: `lb-${Date.now()}-${Math.random().toString(36).slice(2,8)}`, game: g, nickname: name, score: sc, createdAt: new Date().toISOString() };
+    await col.insertOne(doc);
+    const { _id, ...clean } = doc;
+    return res.status(201).json({ entry: clean });
+  } catch (e) {
+    return res.status(500).json({ error: 'Failed to submit score' });
+  }
 });
 
 // Upload API
