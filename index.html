@@ -499,6 +499,7 @@
     function SnakeGame({ open, onClose, onGameOver }) {
       const canvasRef = useRef(null);
       const [score, setScore] = useState(0);
+      const scoreRef = useRef(0);
       const dirRef = useRef({ x: 1, y: 0 });
       const stateRef = useRef({ grid: 20, snake: [{x:10,y:10}], food: {x:15,y:10}, alive: false, t: 0 });
       const rafRef = useRef(null);
