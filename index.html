@@ -691,7 +691,7 @@
           obstacles = obstacles.filter(ob=> ob.x+ob.w>0);
           // collisions
           for(const ob of obstacles){
-            if(player.x+player.r>ob.x && player.x-player.r<ob.x+ob.w){ if(player.y-player.r<ob.h1 || player.y+player.r>ob.y2){ alive=false; onClose(); return; } }
+            if(player.x+player.r>ob.x && player.x-player.r<ob.x+ob.w){ if(player.y-player.r<ob.h1 || player.y+player.r>ob.y2){ alive=false; try{ onGameOver && onGameOver(Math.floor((ts - start)/1000)); }catch{} onClose(); return; } }
           }
           rafRef.current = requestAnimationFrame(loop);
         }
