@@ -31,13 +31,13 @@
     .hero-bg { background-image: linear-gradient(rgba(17, 24, 39, 0.8), rgba(17, 24, 39, 0.8)), url('assets/images/gallery/homeimg.jpg'); background-size: cover; background-position: center; }
     h1, h2 { font-family: 'Cinzel', serif; font-weight: 900; }
     h3 { font-weight: 700; }
-    .project-card { aspect-ratio: 4 / 5; display: flex; flex-direction: column; }
-    .project-card img { height: 55%; object-fit: cover; }
+    .project-card { display: flex; flex-direction: column; }
+    .project-card img { aspect-ratio: 4 / 5; width: 100%; height: auto; object-fit: cover; }
     .project-card .p-6 { display: flex; flex-direction: column; flex: 1; }
     .project-card .p-6 a { margin-top: auto; }
     .project-card--separator { align-items: center; justify-content: center; }
     .project-card--separator .p-6 { flex: 0 0 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    @media (min-width: 1024px) { .project-card { aspect-ratio: 4 / 5; } .project-card img { height: 55%; } }
+    @media (min-width: 1024px) { .project-card img { aspect-ratio: 4 / 5; } }
     .gallery-scroll::-webkit-scrollbar{height:8px}.gallery-scroll::-webkit-scrollbar-track{background:#1f2937;border-radius:10px}.gallery-scroll::-webkit-scrollbar-thumb{background:#005daa;border-radius:10px}.gallery-scroll::-webkit-scrollbar-thumb:hover{background:#00a9e0}
   </style>
   <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
