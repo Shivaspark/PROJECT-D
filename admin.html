@@ -481,7 +481,7 @@
       }));
       list.querySelectorAll('.btn-hl-delete').forEach(btn => btn.addEventListener('click', async (e) => {
         e.stopPropagation(); const id = e.currentTarget.getAttribute('data-id'); if (!confirm('Delete this highlight?')) return; await ensureAuthIfNeeded(true);
-        const r = await fetch(`/api/highlights/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
+        const r = await fetch('/api/highlights/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify({ id }) });
         if (!r.ok) { const t = await r.text(); alert('Delete failed: ' + t); return; }
         await refreshHighlightsList();
       }));
@@ -591,8 +591,8 @@
         }));
         list.querySelectorAll('.btn-ps-delete').forEach(btn => btn.addEventListener('click', async (e) => {
           e.stopPropagation(); const id = e.currentTarget.getAttribute('data-id'); if (!confirm('Delete this poster?')) return; await ensureAuthIfNeeded(true);
-          const r = await fetch(`/api/power-stones/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
-          if (!r.ok) { alert('Delete failed'); return; }
+          const r = await fetch('/api/power-stones/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify({ id }) });
+          if (!r.ok) { const t = await r.text(); alert('Delete failed: ' + t); return; }
           await refreshPsList();
         }));
       } else if (res.status !== 503) {
@@ -672,7 +672,7 @@
       list.innerHTML = bulletins.map(bulletinRowHTML).join('');
       list.querySelectorAll('.btn-bul-delete').forEach(btn => btn.addEventListener('click', async (e) => {
         e.stopPropagation(); const id = e.currentTarget.getAttribute('data-id'); if (!confirm('Delete this document?')) return; await ensureAuthIfNeeded(true);
-        const r = await fetch(`/api/bulletins/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
+        const r = await fetch('/api/bulletins/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify({ id }) });
         if (!r.ok) { const t = await r.text(); alert('Delete failed: ' + t); return; }
         await refreshBulletinsList();
       }));
