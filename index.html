@@ -637,6 +637,7 @@
         let mInt = setInterval(()=> setUp(Math.floor(Math.random()*9)), 700);
         return ()=>{ clearInterval(tInt); clearInterval(mInt); };
       },[open]);
+      useEffect(()=>{ if(open && time===0){ try{ onGameOver && onGameOver(score); }catch{} } }, [time, open, score, onGameOver]);
       function hit(i){ if(time===0) return; if(i===up){ setScore(s=>s+1); setUp(-1); } }
       if(!open) return null;
       return (
