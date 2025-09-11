@@ -250,7 +250,14 @@
       }
     }
 
-    function absAsset(u){ if(!u) return u; if(window.__API_BASE && /^assets\//.test(u)) return window.__API_BASE + '/' + u; return u; }
+    function absAsset(u){
+      if (!u) return u;
+      let s = String(u).trim();
+      s = s.replace(/^https?:\/\/drive\.google\.com\/file\/d\/([^/]+)\/view.*$/,'https://drive.google.com/uc?export=view&id=$1');
+      if (s.startsWith('/assets/')) s = s.slice(1);
+      if (window.__API_BASE && /^assets\//.test(s)) return window.__API_BASE + '/' + s;
+      return s;
+    }
     function projectRowHTML(p) {
       const type = p.type === 'flagship' ? 'existing' : p.type;
       const rowAccent = type === 'existing' ? 'border-gray-500' : 'border-primary-blue';
@@ -387,12 +394,19 @@
         form.removeAttribute('data-edit-id');
         document.getElementById('pf-submit').textContent = 'Add Project';
       });
+      function normalizeImageForSave(u){
+        if (!u) return u;
+        let s = String(u).trim();
+        s = s.replace(/^https?:\/\/drive\.google\.com\/file\/d\/([^/]+)\/view.*$/,'https://drive.google.com/uc?export=view&id=$1');
+        if (s.startsWith('/assets/')) s = s.slice(1);
+        return s;
+      }
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const payload = {
           title: document.getElementById('pf-title').value.trim(),
           type: document.getElementById('pf-type').value,
-          image: document.getElementById('pf-image').value.trim(),
+          image: normalizeImageForSave(document.getElementById('pf-image').value.trim()),
           description: document.getElementById('pf-desc').value.trim()
         };
         const editId = form.getAttribute('data-edit-id');
