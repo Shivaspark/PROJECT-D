@@ -153,8 +153,13 @@
             </select>
           </div>
           <div class="md:col-span-2">
-            <label class="block text-gray-300 text-sm mb-1">Image URL</label>
-            <input id="ps-src" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="https://..." />
+            <label class="block text-gray-300 text-sm mb-1">Image</label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <input id="ps-src" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="https://..." />
+              <input id="ps-file" type="file" accept="image/*" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" />
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Provide a URL or upload a file. Upload will auto-fill the URL.</p>
+            <img id="ps-preview" src="" alt="Preview" class="mt-2 h-24 w-40 object-cover rounded border border-gray-700 hidden" />
           </div>
           <div class="md:col-span-3">
             <label class="block text-gray-300 text-sm mb-1">Title (optional)</label>
@@ -464,6 +469,13 @@
       if (src) { el.src = src; el.classList.remove('hidden'); }
       else { el.src = ''; el.classList.add('hidden'); }
     }
+    function setPsPreview(url) {
+      const el = document.getElementById('ps-preview');
+      if (!el) return;
+      const src = absAsset(normalizeImageUrl(url));
+      if (src) { el.src = src; el.classList.remove('hidden'); }
+      else { el.src = ''; el.classList.add('hidden'); }
+    }
 
     async function refreshHighlightsList() {
       const list = document.getElementById('highlights-list');
@@ -645,6 +657,30 @@
     function attachPsHandlers() {
       const form = document.getElementById('ps-form');
       const resetBtn = document.getElementById('ps-reset');
+      const srcInput = document.getElementById('ps-src');
+      const fileInput = document.getElementById('ps-file');
+
+      srcInput.addEventListener('input', () => { const v = srcInput.value.trim(); const n = normalizeImageUrl(v); if (n !== v) srcInput.value = n; setPsPreview(n); });
+
+      fileInput.addEventListener('change', async () => {
+        const f = fileInput.files && fileInput.files[0];
+        if (!f) return;
+        const fd = new FormData();
+        fd.append('file', f);
+        await ensureAuthIfNeeded();
+        const resp = await fetch('/api/upload', { method: 'POST', headers: { ...getAuthHeader() }, body: fd });
+        const data = await resp.json();
+        if (resp.ok && data.url) {
+          const normalized = normalizeImageUrl(data.url);
+          srcInput.value = normalized;
+          setPsPreview(normalized);
+        } else {
+          const msg = (data && data.error) ? data.error : 'Upload failed';
+          alert(msg);
+        }
+        fileInput.value = '';
+      });
+
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const payload = {
@@ -658,9 +694,10 @@
         const res = await fetch('/api/power-stones', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
         if (!res.ok) { const t = await res.text(); alert('Save failed: ' + t); return; }
         form.reset();
+        setPsPreview('');
         await refreshPsList();
       });
-      resetBtn.addEventListener('click', () => { form.reset(); });
+      resetBtn.addEventListener('click', () => { form.reset(); setPsPreview(''); });
       refreshPsList();
     }
 
