@@ -269,9 +269,9 @@
 
       // Flagship card uses same content but image size matches EventsSection (h-48)
       const FlagCard = (p) => (
-        <div className="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
+        <div className="bg-dark-secondary rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
           <img src={absAsset(p.image)} alt={p.title} className="w-full h-48 object-cover" loading="eager" decoding="sync" />
-          <div className="p-6">
+          <div className="p-6 text-center md:text-left">
             <h3 className="text-xl font-bold my-2 text-accent-blue">{p.title}</h3>
             <p className="text-gray-400 mb-4">{p.description}</p>
             <a href="#contact" className="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest →</a>
