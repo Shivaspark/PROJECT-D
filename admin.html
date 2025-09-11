@@ -419,9 +419,10 @@
 
     // Highlights admin UI
     function highlightItemRowHTML(h) {
+      const src = absAsset(h.src);
       return `
         <div class="hl-row border-l-4 border-primary-blue border border-gray-700 rounded p-3 flex items-start gap-3 hover:bg-dark-bg/40" data-id="${h.id}">
-          <img src="${h.src}" alt="${h.title || 'Highlight'}" class="hl-thumb w-24 h-16 object-cover rounded border border-gray-600 cursor-zoom-in"/>
+          <img src="${src}" alt="${h.title || 'Highlight'}" class="hl-thumb w-24 h-16 object-cover rounded border border-gray-600 cursor-zoom-in" data-src="${src}" data-title="${h.title || ''}" />
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
               <div class="text-accent-blue font-semibold truncate">${h.title || h.src}</div>
@@ -430,7 +431,7 @@
             <div class="text-gray-500 text-xs mt-1 break-words">${h.src}</div>
           </div>
           <div class="flex gap-2">
-            <button data-src="${h.src}" data-title="${h.title || ''}" class="btn-hl-view bg-primary-blue text-white px-3 py-1 rounded-full">View</button>
+            <button data-src="${src}" data-title="${h.title || ''}" class="btn-hl-view bg-primary-blue text-white px-3 py-1 rounded-full">View</button>
             <button data-id="${h.id}" class="btn-hl-delete bg-gray-700 text-white px-3 py-1 rounded-full">Delete</button>
           </div>
         </div>`
@@ -439,7 +440,7 @@
     function setHighlightPreview(url) {
       const el = document.getElementById('hf-preview');
       if (!el) return;
-      if (url) { el.src = url; el.classList.remove('hidden'); }
+      if (url) { el.src = absAsset(url); el.classList.remove('hidden'); }
       else { el.src = ''; el.classList.add('hidden'); }
     }
 
@@ -550,10 +551,11 @@
 
     // Power Stones admin UI
     function psCardHTML(s) {
+      const src = absAsset(s.src);
       return `
         <div class="border border-gray-700 rounded p-3 flex items-start gap-3">
           <div class="w-24 aspect-[4/5] overflow-hidden rounded border border-gray-600">
-            <img src="${s.src}" alt="${s.title || ''}" class="w-full h-full object-cover cursor-zoom-in" data-src="${s.src}" data-title="${s.title || ''}"/>
+            <img src="${src}" alt="${s.title || ''}" class="w-full h-full object-cover cursor-zoom-in" data-src="${src}" data-title="${s.title || ''}"/>
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
@@ -563,7 +565,7 @@
             <div class="text-gray-500 text-xs mt-1 break-words">${s.src}</div>
           </div>
           <div class="flex gap-2">
-            <button data-src="${s.src}" data-title="${s.title || ''}" class="btn-ps-view bg-primary-blue text-white px-3 py-1 rounded-full">View</button>
+            <button data-src="${src}" data-title="${s.title || ''}" class="btn-ps-view bg-primary-blue text-white px-3 py-1 rounded-full">View</button>
             <button data-id="${s.id}" class="btn-ps-delete bg-gray-700 text-white px-3 py-1 rounded-full">Delete</button>
           </div>
         </div>`
