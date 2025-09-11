@@ -240,8 +240,15 @@
         load();
         return () => { alive = false; };
       }, []);
-      const existing = projects.filter(p => p.type === 'existing' || p.type === 'flagship');
+      // Admin edits should not change flagship section — flagships are static
+      const existing = projects.filter(p => p.type === 'existing');
       const upcoming = projects.filter(p => p.type === 'upcoming');
+
+      const flagships = [
+        { id: 'flg-daya-2026', title: 'DAYA 2026', description: 'Daya is a legacy project of the Rotaract Club of INFO Institute of Engineering. Through this initiative, we have brought together 500+ orphaned children, engaging them in games and cultural activities.', image: 'assets/images/projects/p-2.jpg' },
+        { id: 'flg-robo-2026', title: 'ROBO 2026', description: 'ROBO (Rise of Bright Opportunities) is a project aimed at creating career opportunities through job fairs, placements and internships.', image: 'assets/images/projects/p-3.jpg' },
+        { id: 'flg-star-2026', title: 'STAR 2026', description: 'STAR is a fellowship trip bringing Rotaractors together to socialize, travel, and share joyful experiences to strengthen bonds.', image: 'assets/images/projects/P-1.jpg' }
+      ];
 
       const carA = useCarousel();
       const carB = useCarousel();
@@ -251,6 +258,20 @@
         <div className="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
           <div className="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
             <img src={absAsset(p.image)} alt={p.title} className="w-full object-cover" loading="lazy" decoding="async" />
+            <div className="p-6">
+              <h3 className="text-xl font-bold my-2 text-accent-blue">{p.title}</h3>
+              <p className="text-gray-400 mb-4">{p.description}</p>
+              <a href="#contact" className="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest →</a>
+            </div>
+          </div>
+        </div>
+      );
+
+      // Flagship card uses same content but image size matches EventsSection (h-48)
+      const FlagCard = (p) => (
+        <div className="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
+          <div className="project-card bg-dark-bg rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 h-full flex flex-col border border-gray-700">
+            <img src={absAsset(p.image)} alt={p.title} className="w-full h-48 object-cover" loading="eager" decoding="sync" />
             <div className="p-6">
               <h3 className="text-xl font-bold my-2 text-accent-blue">{p.title}</h3>
               <p className="text-gray-400 mb-4">{p.description}</p>
@@ -274,7 +295,7 @@
                 <button onClick={carA.next} aria-label="Next" className="hidden sm:flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-primary-blue text-white w-10 h-10 rounded-full shadow hover:bg-accent-blue transition"><span>&gt;</span></button>
                 <div ref={carA.viewportRef} className="overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth px-1">
                   <div className="flex gap-8 py-2">
-                    {existing.map(p => <Card key={p.id} {...p} />)}
+                    {flagships.map(p => <FlagCard key={p.id} {...p} />)}
                   </div>
                 </div>
               </div>
@@ -440,7 +461,7 @@
         <section id="bulletin" className="py-20 bg-dark-bg">
           <div className="container mx-auto px-6">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-black text-white">மாற்றத்தின் முத்திரை - THE SEAL OF CHANGE</h2>
+              <h2 className="text-3xl md:text-4xl font-black text-white">���ாற்றத்தின் முத்திரை - THE SEAL OF CHANGE</h2>
               <p className="text-gray-400 mt-2">News and tales from our clan in 5 languages</p>
               <div className="w-24 h-1 bg-primary-blue mx-auto mt-4" />
             </div>
