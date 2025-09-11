@@ -621,6 +621,34 @@
     }
 
     // Bulletins (Documents) admin UI
+
+    // Convert Google Drive view/open links to direct-download URLs (uc?export=download&id=FILEID)
+    function toDirectDriveUrl(url) {
+      if (!url || typeof url !== 'string') return url;
+      url = url.trim();
+      try {
+        const u = new URL(url);
+        const host = u.hostname.toLowerCase();
+        // Only handle common Drive view links
+        if (host.includes('drive.google.com') || host.includes('docs.google.com')) {
+          // /file/d/FILEID/view or /file/d/FILEID
+          const m1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+          if (m1 && m1[1]) return 'https://drive.google.com/uc?export=download&id=' + m1[1];
+          // ?id=FILEID or &id=FILEID
+          const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+          if (m2 && m2[1]) return 'https://drive.google.com/uc?export=download&id=' + m2[1];
+          // already an uc link — ensure export=download
+          if (/drive\.google\.com\/uc\?/i.test(url)) {
+            if (/export=download/i.test(url)) return url;
+            return url + (url.indexOf('?') === -1 ? '?export=download' : '&export=download');
+          }
+        }
+        // Already a docs.googleusercontent or direct file host — return as-is
+        return url;
+      } catch (e) {
+        return url;
+      }
+    }
     function bulletinRowHTML(b) {
       return `
         <div class="bulletin-row border-l-4 border-primary-blue border border-gray-700 rounded p-3 flex flex-col md:flex-row md:items-start gap-3 hover:bg-dark-bg/40" data-id="${b.id}">
@@ -699,6 +727,8 @@
           date: document.getElementById('bf-date').value
         };
         if (!payload.pdf) { alert('PDF URL is required'); return; }
+        // Convert common Google Drive share links to direct-download links
+        try { payload.pdf = toDirectDriveUrl(payload.pdf); } catch (e) { /* keep original */ }
         await ensureAuthIfNeeded();
         const res = await fetch('/api/bulletins', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
         if (!res.ok) { const t = await res.text(); alert('Save failed: ' + t); return; }
