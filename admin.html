@@ -251,6 +251,22 @@
     }
 
     function absAsset(u){ if(!u) return u; if(window.__API_BASE && /^assets\//.test(u)) return window.__API_BASE + '/' + u; return u; }
+    function normalizeImageUrl(u){
+      try {
+        const s = String(u || '').trim();
+        if (!s) return s;
+        let m;
+        m = s.match(/^https?:\/\/drive\.google\.com\/file\/d\/([^\/?#]+)\//i);
+        if (m) return `https://drive.google.com/uc?export=view&id=${m[1]}`;
+        m = s.match(/^https?:\/\/drive\.google\.com\/open\?id=([^&#]+)/i);
+        if (m) return `https://drive.google.com/uc?export=view&id=${m[1]}`;
+        m = s.match(/^https?:\/\/drive\.google\.com\/uc\?(?:export=(?:download|view)&)?id=([^&#]+)/i);
+        if (m) return `https://drive.google.com/uc?export=view&id=${m[1]}`;
+        m = s.match(/^https?:\/\/drive\.google\.com\/thumbnail\?id=([^&#]+)/i);
+        if (m) return `https://drive.google.com/uc?export=view&id=${m[1]}`;
+        return s;
+      } catch { return u; }
+    }
     function projectRowHTML(p) {
       const type = p.type === 'flagship' ? 'existing' : p.type;
       const rowAccent = type === 'existing' ? 'border-gray-500' : 'border-primary-blue';
@@ -276,7 +292,7 @@
     function setPreview(url){
       const preview = document.getElementById('pf-preview');
       if (!preview) return;
-      const src = absAsset(url);
+      const src = absAsset(normalizeImageUrl(url));
       if (src) { preview.src = src; preview.classList.remove('hidden'); }
       else { preview.src=''; preview.classList.add('hidden'); }
     }
@@ -361,7 +377,7 @@
       const fileInput = document.getElementById('pf-file');
       const imageInput = document.getElementById('pf-image');
 
-      imageInput.addEventListener('input', () => setPreview(imageInput.value.trim()));
+      imageInput.addEventListener('input', () => { const v = imageInput.value.trim(); const n = normalizeImageUrl(v); if (n !== v) imageInput.value = n; setPreview(n); });
 
       fileInput.addEventListener('change', async () => {
         const f = fileInput.files && fileInput.files[0];
@@ -395,6 +411,7 @@
           image: document.getElementById('pf-image').value.trim(),
           description: document.getElementById('pf-desc').value.trim()
         };
+        payload.image = normalizeImageUrl(payload.image);
         const editId = form.getAttribute('data-edit-id');
         await ensureAuthIfNeeded();
         let res;
@@ -497,7 +514,7 @@
       const titleInput = document.getElementById('hf-title');
       const orderInput = document.getElementById('hf-order');
 
-      srcInput.addEventListener('input', () => setHighlightPreview(srcInput.value.trim()));
+      srcInput.addEventListener('input', () => { const v = srcInput.value.trim(); const n = normalizeImageUrl(v); if (n !== v) srcInput.value = n; setHighlightPreview(n); });
 
       resetBtn.addEventListener('click', () => {
         form.reset();
@@ -513,6 +530,7 @@
           title: titleInput.value.trim(),
           order: Number(orderInput.value)
         };
+        payload.src = normalizeImageUrl(payload.src);
         if (!payload.src) { alert('Image URL is required'); return; }
         if (!Number.isFinite(payload.order)) delete payload.order;
         await ensureAuthIfNeeded();
@@ -609,6 +627,7 @@
           src: document.getElementById('ps-src').value.trim(),
           title: document.getElementById('ps-title').value.trim()
         };
+        payload.src = normalizeImageUrl(payload.src);
         if (!payload.src || !Number.isInteger(payload.slot)) { alert('Slot and Image URL required'); return; }
         await ensureAuthIfNeeded();
         const res = await fetch('/api/power-stones', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
