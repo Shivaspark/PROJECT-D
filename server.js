@@ -669,8 +669,11 @@ app.get('/api/pdf-proxy', async (req, res) => {
     try { u = new URL(rawUrl); } catch { return res.status(400).send('invalid url'); }
     if (u.protocol !== 'https:') return res.status(400).send('https only');
 
-    const allowList = (process.env.PDF_PROXY_ALLOWLIST || 'www.w3.org').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-    if (!allowList.includes(u.hostname.toLowerCase())) return res.status(403).send('host not allowed');
+    const raw = process.env.PDF_PROXY_ALLOWLIST || 'www.w3.org,drive.google.com,docs.google.com,googleusercontent.com';
+    const allowList = raw.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    const host = u.hostname.toLowerCase();
+    const ok = allowList.some(d => host === d || host.endsWith('.' + d));
+    if (!ok) return res.status(403).send('host not allowed');
 
     const MAX = 25 * 1024 * 1024; // 25MB cap
     let total = 0;
