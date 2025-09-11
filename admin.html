@@ -419,9 +419,10 @@
 
     // Highlights admin UI
     function highlightItemRowHTML(h) {
+      const src = absAsset(h.src);
       return `
         <div class="hl-row border-l-4 border-primary-blue border border-gray-700 rounded p-3 flex items-start gap-3 hover:bg-dark-bg/40" data-id="${h.id}">
-          <img src="${h.src}" alt="${h.title || 'Highlight'}" class="hl-thumb w-24 h-16 object-cover rounded border border-gray-600 cursor-zoom-in"/>
+          <img src="${src}" alt="${h.title || 'Highlight'}" class="hl-thumb w-24 h-16 object-cover rounded border border-gray-600 cursor-zoom-in" data-src="${src}" data-title="${h.title || ''}" />
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
               <div class="text-accent-blue font-semibold truncate">${h.title || h.src}</div>
@@ -430,7 +431,7 @@
             <div class="text-gray-500 text-xs mt-1 break-words">${h.src}</div>
           </div>
           <div class="flex gap-2">
-            <button data-src="${h.src}" data-title="${h.title || ''}" class="btn-hl-view bg-primary-blue text-white px-3 py-1 rounded-full">View</button>
+            <button data-src="${src}" data-title="${h.title || ''}" class="btn-hl-view bg-primary-blue text-white px-3 py-1 rounded-full">View</button>
             <button data-id="${h.id}" class="btn-hl-delete bg-gray-700 text-white px-3 py-1 rounded-full">Delete</button>
           </div>
         </div>`
@@ -439,7 +440,7 @@
     function setHighlightPreview(url) {
       const el = document.getElementById('hf-preview');
       if (!el) return;
-      if (url) { el.src = url; el.classList.remove('hidden'); }
+      if (url) { el.src = absAsset(url); el.classList.remove('hidden'); }
       else { el.src = ''; el.classList.add('hidden'); }
     }
 
@@ -550,10 +551,11 @@
 
     // Power Stones admin UI
     function psCardHTML(s) {
+      const src = absAsset(s.src);
       return `
         <div class="border border-gray-700 rounded p-3 flex items-start gap-3">
           <div class="w-24 aspect-[4/5] overflow-hidden rounded border border-gray-600">
-            <img src="${s.src}" alt="${s.title || ''}" class="w-full h-full object-cover cursor-zoom-in" data-src="${s.src}" data-title="${s.title || ''}"/>
+            <img src="${src}" alt="${s.title || ''}" class="w-full h-full object-cover cursor-zoom-in" data-src="${src}" data-title="${s.title || ''}"/>
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
@@ -563,7 +565,7 @@
             <div class="text-gray-500 text-xs mt-1 break-words">${s.src}</div>
           </div>
           <div class="flex gap-2">
-            <button data-src="${s.src}" data-title="${s.title || ''}" class="btn-ps-view bg-primary-blue text-white px-3 py-1 rounded-full">View</button>
+            <button data-src="${src}" data-title="${s.title || ''}" class="btn-ps-view bg-primary-blue text-white px-3 py-1 rounded-full">View</button>
             <button data-id="${s.id}" class="btn-ps-delete bg-gray-700 text-white px-3 py-1 rounded-full">Delete</button>
           </div>
         </div>`
@@ -621,6 +623,34 @@
     }
 
     // Bulletins (Documents) admin UI
+
+    // Convert Google Drive view/open links to direct-download URLs (uc?export=download&id=FILEID)
+    function toDirectDriveUrl(url) {
+      if (!url || typeof url !== 'string') return url;
+      url = url.trim();
+      try {
+        const u = new URL(url);
+        const host = u.hostname.toLowerCase();
+        // Only handle common Drive view links
+        if (host.includes('drive.google.com') || host.includes('docs.google.com')) {
+          // /file/d/FILEID/view or /file/d/FILEID
+          const m1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+          if (m1 && m1[1]) return 'https://drive.google.com/uc?export=download&id=' + m1[1];
+          // ?id=FILEID or &id=FILEID
+          const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+          if (m2 && m2[1]) return 'https://drive.google.com/uc?export=download&id=' + m2[1];
+          // already an uc link — ensure export=download
+          if (/drive\.google\.com\/uc\?/i.test(url)) {
+            if (/export=download/i.test(url)) return url;
+            return url + (url.indexOf('?') === -1 ? '?export=download' : '&export=download');
+          }
+        }
+        // Already a docs.googleusercontent or direct file host — return as-is
+        return url;
+      } catch (e) {
+        return url;
+      }
+    }
     function bulletinRowHTML(b) {
       return `
         <div class="bulletin-row border-l-4 border-primary-blue border border-gray-700 rounded p-3 flex flex-col md:flex-row md:items-start gap-3 hover:bg-dark-bg/40" data-id="${b.id}">
@@ -699,6 +729,8 @@
           date: document.getElementById('bf-date').value
         };
         if (!payload.pdf) { alert('PDF URL is required'); return; }
+        // Convert common Google Drive share links to direct-download links
+        try { payload.pdf = toDirectDriveUrl(payload.pdf); } catch (e) { /* keep original */ }
         await ensureAuthIfNeeded();
         const res = await fetch('/api/bulletins', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
         if (!res.ok) { const t = await res.text(); alert('Save failed: ' + t); return; }

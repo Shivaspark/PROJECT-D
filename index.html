@@ -240,8 +240,15 @@
         load();
         return () => { alive = false; };
       }, []);
-      const existing = projects.filter(p => p.type === 'existing' || p.type === 'flagship');
+      // Admin edits should not change flagship section — flagships are static
+      const existing = projects.filter(p => p.type === 'existing');
       const upcoming = projects.filter(p => p.type === 'upcoming');
+
+      const flagships = [
+        { id: 'flg-daya-2026', title: 'DAYA 2026', description: 'Daya is a legacy project of the Rotaract Club of INFO Institute of Engineering. Through this initiative, we have brought together 500+ orphaned children, engaging them in games and cultural activities.', image: 'assets/images/projects/p-2.jpg' },
+        { id: 'flg-robo-2026', title: 'ROBO 2026', description: 'ROBO (Rise of Bright Opportunities) is a project aimed at creating career opportunities through job fairs, placements and internships.', image: 'assets/images/projects/p-3.jpg' },
+        { id: 'flg-star-2026', title: 'STAR 2026', description: 'STAR is a fellowship trip bringing Rotaractors together to socialize, travel, and share joyful experiences to strengthen bonds.', image: 'assets/images/projects/P-1.jpg' }
+      ];
 
       const carA = useCarousel();
       const carB = useCarousel();
@@ -260,6 +267,18 @@
         </div>
       );
 
+      // Flagship card uses same content but image size matches EventsSection (h-48)
+      const FlagCard = (p) => (
+        <div className="bg-dark-secondary rounded-lg shadow-lg overflow-hidden transform hover:-translate-y-2 transition-transform duration-300 border border-gray-700">
+          <img src={absAsset(p.image)} alt={p.title} className="w-full h-48 object-cover" loading="eager" decoding="sync" />
+          <div className="p-6 text-center md:text-left">
+            <h3 className="text-xl font-bold my-2 text-accent-blue">{p.title}</h3>
+            <p className="text-gray-400 mb-4">{p.description}</p>
+            <a href="#contact" className="font-semibold text-primary-blue hover:text-accent-blue">RSVP for this Quest →</a>
+          </div>
+        </div>
+      );
+
       return (
         <Fragment>
           <section id="projects" className="py-20 bg-dark-secondary">
@@ -269,13 +288,9 @@
                 <p className="text-gray-400 mt-2">Forging a lasting legacy in our realm.</p>
                 <div className="w-24 h-1 bg-primary-blue mx-auto mt-4" />
               </div>
-              <div className="relative">
-                <button onClick={carA.prev} aria-label="Previous" className="hidden sm:flex items-center justify-center absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-primary-blue text-white w-10 h-10 rounded-full shadow hover:bg-accent-blue transition"><span>&lt;</span></button>
-                <button onClick={carA.next} aria-label="Next" className="hidden sm:flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-primary-blue text-white w-10 h-10 rounded-full shadow hover:bg-accent-blue transition"><span>&gt;</span></button>
-                <div ref={carA.viewportRef} className="overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth px-1">
-                  <div className="flex gap-8 py-2">
-                    {existing.map(p => <Card key={p.id} {...p} />)}
-                  </div>
+              <div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {flagships.map(p => <FlagCard key={p.id} {...p} />)}
                 </div>
               </div>
             </div>
@@ -414,7 +429,28 @@
           .catch(() => { if (!alive) return; setLatest(null); setArchives([]); });
         return () => { alive = false; };
       }, [active]);
-      const proxied = latest && latest.pdf ? `/api/pdf-proxy?url=${encodeURIComponent(latest.pdf)}` : '';
+      function toDrivePreview(url) {
+        if (!url || typeof url !== 'string') return null;
+        try {
+          // match /file/d/ID or ?id=ID or /d/ID/
+          const m1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+          if (m1 && m1[1]) return `https://drive.google.com/file/d/${m1[1]}/preview`;
+          const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+          if (m2 && m2[1]) return `https://drive.google.com/file/d/${m2[1]}/preview`;
+          const m3 = url.match(/\/d\/([a-zA-Z0-9_-]+)\//);
+          if (m3 && m3[1]) return `https://drive.google.com/file/d/${m3[1]}/preview`;
+          // fallback: not a drive link
+          return null;
+        } catch (e) { return null; }
+      }
+
+      let proxied = '';
+      if (latest && latest.pdf) {
+        const drivePreview = toDrivePreview(latest.pdf);
+        if (drivePreview) proxied = drivePreview;
+        else proxied = `/api/pdf-proxy?url=${encodeURIComponent(latest.pdf)}`;
+      }
+
       return (
         <section id="bulletin" className="py-20 bg-dark-bg">
           <div className="container mx-auto px-6">
