@@ -290,13 +290,9 @@
                 <p className="text-gray-400 mt-2">Forging a lasting legacy in our realm.</p>
                 <div className="w-24 h-1 bg-primary-blue mx-auto mt-4" />
               </div>
-              <div className="relative">
-                <button onClick={carA.prev} aria-label="Previous" className="hidden sm:flex items-center justify-center absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-primary-blue text-white w-10 h-10 rounded-full shadow hover:bg-accent-blue transition"><span>&lt;</span></button>
-                <button onClick={carA.next} aria-label="Next" className="hidden sm:flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-primary-blue text-white w-10 h-10 rounded-full shadow hover:bg-accent-blue transition"><span>&gt;</span></button>
-                <div ref={carA.viewportRef} className="overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth px-1">
-                  <div className="flex gap-8 py-2">
-                    {flagships.map(p => <FlagCard key={p.id} {...p} />)}
-                  </div>
+              <div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {flagships.map(p => <FlagCard key={p.id} {...p} />)}
                 </div>
               </div>
             </div>
@@ -461,7 +457,7 @@
         <section id="bulletin" className="py-20 bg-dark-bg">
           <div className="container mx-auto px-6">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-black text-white">���ாற்றத்தின் முத்திரை - THE SEAL OF CHANGE</h2>
+              <h2 className="text-3xl md:text-4xl font-black text-white">மாற்றத்தின் முத்திரை - THE SEAL OF CHANGE</h2>
               <p className="text-gray-400 mt-2">News and tales from our clan in 5 languages</p>
               <div className="w-24 h-1 bg-primary-blue mx-auto mt-4" />
             </div>
