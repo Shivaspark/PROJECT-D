@@ -576,7 +576,10 @@ app.post('/api/projects', basicAuth, async (req, res) => {
   const { id, title, description, image, type } = req.body || {};
   if (!title || !description || !image || !type) return res.status(400).json({ error: 'Missing fields' });
   try {
-    const created = await dbCreateProject({ id, title, description, image, type });
+    let img = String(image).trim();
+    img = img.replace(/^https?:\/\/drive\.google\.com\/file\/d\/([^/]+)\/view.*$/,'https://drive.google.com/uc?export=view&id=$1');
+    if (img.startsWith('/assets/')) img = img.slice(1);
+    const created = await dbCreateProject({ id, title, description, image: img, type });
     res.status(201).json({ project: created });
   } catch (e) {
     if (e && e.code === 11000) return res.status(409).json({ error: 'Duplicate id' });
@@ -588,7 +591,12 @@ app.put('/api/projects/:id', basicAuth, async (req, res) => {
   const { id } = req.params;
   const { title, description, image, type } = req.body || {};
   try {
-    const updated = await dbUpdateProject(id, { title, description, image, type });
+    let img = typeof image === 'string' ? image.trim() : image;
+    if (typeof img === 'string') {
+      img = img.replace(/^https?:\/\/drive\.google\.com\/file\/d\/([^/]+)\/view.*$/,'https://drive.google.com/uc?export=view&id=$1');
+      if (img.startsWith('/assets/')) img = img.slice(1);
+    }
+    const updated = await dbUpdateProject(id, { title, description, image: img, type });
     if (!updated) return res.status(404).json({ error: 'Not found' });
     res.json({ project: updated });
   } catch (e) {
@@ -613,7 +621,12 @@ app.post('/api/projects/update', basicAuth, async (req, res) => {
   try {
     const { id, title, description, image, type } = req.body || {};
     if (!id) return res.status(400).json({ error: 'id required' });
-    const updated = await dbUpdateProject(id, { title, description, image, type });
+    let img = typeof image === 'string' ? image.trim() : image;
+    if (typeof img === 'string') {
+      img = img.replace(/^https?:\/\/drive\.google\.com\/file\/d\/([^/]+)\/view.*$/,'https://drive.google.com/uc?export=view&id=$1');
+      if (img.startsWith('/assets/')) img = img.slice(1);
+    }
+    const updated = await dbUpdateProject(id, { title, description, image: img, type });
     if (!updated) return res.status(404).json({ error: 'Not found' });
     res.set('Cache-Control', 'no-store');
     res.json({ project: updated });
