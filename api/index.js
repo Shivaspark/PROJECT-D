@@ -544,6 +544,29 @@ app.post('/api/upload', basicAuth, upload.single('file'), async (req, res) => {
   }
 });
 
+// PDF Upload API (Blob)
+const uploadPdf = multer({ storage: memStorage, limits: { fileSize: 25 * 1024 * 1024 } });
+app.post('/api/upload-pdf', basicAuth, uploadPdf.single('file'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file' });
+    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+      return res.status(501).json({ error: 'Blob storage not configured' });
+    }
+    const safeName = path.basename(req.file.originalname).replace(/[^a-z0-9\.-]/gi, '_');
+    const ext = path.extname(safeName).toLowerCase();
+    if (ext !== '.pdf') return res.status(400).json({ error: 'Only PDF allowed' });
+    const key = `docs/${Date.now()}-${safeName}`;
+    const result = await put(key, req.file.buffer, {
+      access: 'public',
+      contentType: 'application/pdf',
+      token: process.env.BLOB_READ_WRITE_TOKEN
+    });
+    return res.json({ url: result.url });
+  } catch (e) {
+    return res.status(500).json({ error: 'Upload failed' });
+  }
+});
+
 // DB Health
 app.get('/api/health/db', async (req, res) => {
   try {
