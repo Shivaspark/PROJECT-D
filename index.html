@@ -240,7 +240,7 @@
         load();
         return () => { alive = false; };
       }, []);
-      const existing = projects.filter(p => p.type === 'existing' || p.type === 'flagship');
+      const existing = projects.filter(p => p.type === 'existing');
       const upcoming = projects.filter(p => p.type === 'upcoming');
 
       const carA = useCarousel();
@@ -274,7 +274,30 @@
                 <button onClick={carA.next} aria-label="Next" className="hidden sm:flex items-center justify-center absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-primary-blue text-white w-10 h-10 rounded-full shadow hover:bg-accent-blue transition"><span>&gt;</span></button>
                 <div ref={carA.viewportRef} className="overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth px-1">
                   <div className="flex gap-8 py-2">
-                    {existing.map(p => <Card key={p.id} {...p} />)}
+                    {[
+                      {
+                        id: 'flg-daya-2026',
+                        title: 'DAYA 2026',
+                        description: 'Daya is a legacy project of the Rotaract Club of INFO Institute of Engineering. Through this initiative, we have brought together 500+ orphaned children, engaging them in games and cultural activities. This project is not just a celebration, but a day dedicated to caring for and honoring these children. The true essence of Daya lies in its theme — Power of Mercy.',
+                        image: absAsset('assets/images/projects/p-2.jpg')
+                      },
+                      {
+                        id: 'flg-robo-2026',
+                        title: 'ROBO 2026',
+                        description: 'ROBO (Rise of Bright Opportunities) is a project of the Rotaract Club of INFO Institute of Engineering aimed at creating career opportunities for students and Rotaractors. Through this initiative, we organize a Job Fair that connects young talents with companies for placements and internships. The project helps participants explore career paths, gain professional exposure, and build a brighter future with new opportunities.',
+                        image: absAsset('assets/images/projects/p-3.jpg')
+                      },
+                      {
+                        id: 'flg-star-2026',
+                        title: 'STAR 2026',
+                        description: 'STAR is a fellowship trip organized by the Rotaract Club of INFO Institute of Engineering. It brings Rotaractors together to socialize, travel, and share joyful experiences beyond regular meetings. The event not only creates fun and relaxation but also strengthens connections, teamwork, and lasting friendships among members',
+                        image: absAsset('assets/images/projects/P-1.jpg')
+                      }
+                    ].map(f => (
+                      <div key={f.id} className="snap-start shrink-0 basis-full md:basis-1/2 lg:basis-1/3">
+                        <EventCard img={f.image} title={f.title}>{f.description}</EventCard>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
