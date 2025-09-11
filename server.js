@@ -821,6 +821,15 @@ app.get('/api/pdf-proxy', async (req, res) => {
 
 app.use(express.static(__dirname));
 
+// Global error handler
+app.use((err, req, res, next) => {
+  try {
+    if (err && err.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ error: 'File too large' });
+    if (err && /Unsupported file type/i.test(String(err.message||''))) return res.status(400).json({ error: 'Unsupported file type' });
+  } catch {}
+  try { if (!res.headersSent) return res.status(500).json({ error: 'Server error' }); } catch {}
+});
+
 app.listen(PORT, () => {
   console.log(`🚀 Rotaract Club website running on http://localhost:${PORT}`);
   console.log(`📁 Serving static files from: ${__dirname}`);
