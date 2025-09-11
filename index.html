@@ -423,7 +423,16 @@
           .catch(() => { if (!alive) return; setLatest(null); setArchives([]); });
         return () => { alive = false; };
       }, [active]);
-      const proxied = latest && latest.pdf ? `/api/pdf-proxy?url=${encodeURIComponent(latest.pdf)}` : '';
+      let proxied = '';
+      if (latest && latest.pdf) {
+        const pdf = latest.pdf;
+        if (typeof pdf === 'string' && (pdf.startsWith('assets/') || pdf.startsWith('/assets/'))) {
+          let p = pdf.startsWith('/assets/') ? pdf.slice(1) : pdf;
+          proxied = (window.__ASSET_BASE && p.startsWith('assets/')) ? window.__ASSET_BASE + '/' + p : p;
+        } else {
+          proxied = `/api/pdf-proxy?url=${encodeURIComponent(pdf)}`;
+        }
+      }
       return (
         <section id="bulletin" className="py-20 bg-dark-bg">
           <div className="container mx-auto px-6">
