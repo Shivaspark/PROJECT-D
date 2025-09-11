@@ -414,7 +414,28 @@
           .catch(() => { if (!alive) return; setLatest(null); setArchives([]); });
         return () => { alive = false; };
       }, [active]);
-      const proxied = latest && latest.pdf ? `/api/pdf-proxy?url=${encodeURIComponent(latest.pdf)}` : '';
+      function toDrivePreview(url) {
+        if (!url || typeof url !== 'string') return null;
+        try {
+          // match /file/d/ID or ?id=ID or /d/ID/
+          const m1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+          if (m1 && m1[1]) return `https://drive.google.com/file/d/${m1[1]}/preview`;
+          const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+          if (m2 && m2[1]) return `https://drive.google.com/file/d/${m2[1]}/preview`;
+          const m3 = url.match(/\/d\/([a-zA-Z0-9_-]+)\//);
+          if (m3 && m3[1]) return `https://drive.google.com/file/d/${m3[1]}/preview`;
+          // fallback: not a drive link
+          return null;
+        } catch (e) { return null; }
+      }
+
+      let proxied = '';
+      if (latest && latest.pdf) {
+        const drivePreview = toDrivePreview(latest.pdf);
+        if (drivePreview) proxied = drivePreview;
+        else proxied = `/api/pdf-proxy?url=${encodeURIComponent(latest.pdf)}`;
+      }
+
       return (
         <section id="bulletin" className="py-20 bg-dark-bg">
           <div className="container mx-auto px-6">
