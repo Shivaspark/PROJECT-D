@@ -104,8 +104,12 @@
         <h2 class="text-xl font-bold text-accent-blue mb-4">Add Highlight</h2>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="md:col-span-2">
-            <label class="block text-gray-300 text-sm mb-1">Image URL</label>
-            <input id="hf-src" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="assets/images/gallery/g-1.svg or https://..." />
+            <label class="block text-gray-300 text-sm mb-1">Image</label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <input id="hf-src" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="assets/images/gallery/g-1.svg or https://..." />
+              <input id="hf-file" type="file" accept="image/*" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" />
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Provide a URL or upload a file. Upload will auto-fill the URL.</p>
             <img id="hf-preview" src="" alt="Preview" class="mt-2 h-24 w-40 object-cover rounded border border-gray-700 hidden" />
           </div>
           <div>
@@ -149,8 +153,13 @@
             </select>
           </div>
           <div class="md:col-span-2">
-            <label class="block text-gray-300 text-sm mb-1">Image URL</label>
-            <input id="ps-src" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="https://..." />
+            <label class="block text-gray-300 text-sm mb-1">Image</label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <input id="ps-src" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="https://... or assets/images/gallery/stone.jpg" />
+              <input id="ps-file" type="file" accept="image/*" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" />
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Provide a URL or upload a file. Upload will auto-fill the URL.</p>
+            <img id="ps-preview" src="" alt="Preview" class="mt-2 h-24 w-40 object-cover rounded border border-gray-700 hidden" />
           </div>
           <div class="md:col-span-3">
             <label class="block text-gray-300 text-sm mb-1">Title (optional)</label>
@@ -196,9 +205,12 @@
             <input id="bf-date" type="date" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" />
           </div>
           <div class="md:col-span-4">
-            <label class="block text-gray-300 text-sm mb-1">PDF URL</label>
-            <input id="bf-pdf" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="https://.../file.pdf" />
-            <p class="text-xs text-gray-500 mt-1">Paste a public PDF link. Hosting files is not handled here.</p>
+            <label class="block text-gray-300 text-sm mb-1">PDF</label>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <input id="bf-pdf" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="https://.../file.pdf or assets/docs/bulletin.pdf" />
+              <input id="bf-file" type="file" accept="application/pdf,.pdf" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" />
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Provide a URL or upload a file. Upload will auto-fill the URL.</p>
           </div>
         </div>
         <div class="mt-4 flex gap-3">
@@ -511,7 +523,21 @@
       const titleInput = document.getElementById('hf-title');
       const orderInput = document.getElementById('hf-order');
 
+      const fileInput = document.getElementById('hf-file');
       srcInput.addEventListener('input', () => setHighlightPreview(srcInput.value.trim()));
+      fileInput.addEventListener('change', async () => {
+        const f = fileInput.files && fileInput.files[0];
+        if (!f) return;
+        const fd = new FormData(); fd.append('file', f);
+        await ensureAuthIfNeeded();
+        const resp = await fetch('/api/upload', { method: 'POST', headers: { ...getAuthHeader() }, body: fd });
+        const data = await resp.json();
+        if (resp.ok && data.url) {
+          srcInput.value = data.url;
+          setHighlightPreview(data.url);
+        } else { alert((data && data.error) || 'Upload failed'); }
+        fileInput.value='';
+      });
 
       resetBtn.addEventListener('click', () => {
         form.reset();
@@ -522,8 +548,11 @@
 
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        let src = srcInput.value.trim();
+        src = src.replace(/^https?:\/\/drive\.google\.com\/file\/d\/([^/]+)\/view.*$/,'https://drive.google.com/uc?export=view&id=$1');
+        if (src.startsWith('/assets/')) src = src.slice(1);
         const payload = {
-          src: srcInput.value.trim(),
+          src,
           title: titleInput.value.trim(),
           order: Number(orderInput.value)
         };
@@ -616,11 +645,28 @@
     function attachPsHandlers() {
       const form = document.getElementById('ps-form');
       const resetBtn = document.getElementById('ps-reset');
+      const srcInput = document.getElementById('ps-src');
+      const fileInput = document.getElementById('ps-file');
+      const preview = document.getElementById('ps-preview');
+      function setPsPreview(u){ if(u){ preview.src = absAsset(u); preview.classList.remove('hidden'); } else { preview.src=''; preview.classList.add('hidden'); } }
+      srcInput.addEventListener('input', ()=> setPsPreview(srcInput.value.trim()));
+      fileInput.addEventListener('change', async ()=>{
+        const f = fileInput.files && fileInput.files[0]; if(!f) return;
+        const fd = new FormData(); fd.append('file', f);
+        await ensureAuthIfNeeded();
+        const resp = await fetch('/api/upload', { method: 'POST', headers: { ...getAuthHeader() }, body: fd });
+        const data = await resp.json();
+        if (resp.ok && data.url){ srcInput.value = data.url; setPsPreview(data.url); } else { alert((data && data.error)||'Upload failed'); }
+        fileInput.value='';
+      });
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        let src = srcInput.value.trim();
+        src = src.replace(/^https?:\/\/drive\.google\.com\/file\/d\/([^/]+)\/view.*$/,'https://drive.google.com/uc?export=view&id=$1');
+        if (src.startsWith('/assets/')) src = src.slice(1);
         const payload = {
           slot: Number(document.getElementById('ps-slot').value),
-          src: document.getElementById('ps-src').value.trim(),
+          src,
           title: document.getElementById('ps-title').value.trim()
         };
         if (!payload.src || !Number.isInteger(payload.slot)) { alert('Slot and Image URL required'); return; }
@@ -696,8 +742,20 @@
       const form = document.getElementById('bulletin-form');
       const resetBtn = document.getElementById('bf-reset');
       const dateInput = document.getElementById('bf-date');
+      const pdfInput = document.getElementById('bf-pdf');
+      const fileInput = document.getElementById('bf-file');
       const today = new Date().toISOString().slice(0,10);
       dateInput.value = today;
+
+      fileInput.addEventListener('change', async ()=>{
+        const f = fileInput.files && fileInput.files[0]; if(!f) return;
+        const fd = new FormData(); fd.append('file', f);
+        await ensureAuthIfNeeded();
+        const resp = await fetch('/api/upload-pdf', { method: 'POST', headers: { ...getAuthHeader() }, body: fd });
+        const data = await resp.json();
+        if (resp.ok && data.url){ pdfInput.value = data.url; } else { alert((data && data.error)||'Upload failed'); }
+        fileInput.value='';
+      });
 
       resetBtn.addEventListener('click', () => {
         form.reset();

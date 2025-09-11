@@ -589,6 +589,36 @@ app.post('/api/upload', basicAuth, upload.single('file'), (req, res) => {
   }
 });
 
+// PDF Upload API
+const docsDir = path.join(__dirname, 'assets', 'docs');
+fs.mkdirSync(docsDir, { recursive: true });
+const docsStorage = multer.diskStorage({
+  destination: function(req, file, cb){ cb(null, docsDir); },
+  filename: function(req, file, cb){
+    const ext = path.extname(file.originalname).toLowerCase();
+    const base = path.basename(file.originalname, ext).replace(/[^a-z0-9\.-]/gi, '_');
+    cb(null, `${Date.now()}-${base}${ext}`);
+  }
+});
+const uploadPdf = multer({
+  storage: docsStorage,
+  limits: { fileSize: 25 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (ext !== '.pdf') return cb(new Error('Unsupported file type'));
+    cb(null, true);
+  }
+});
+app.post('/api/upload-pdf', basicAuth, uploadPdf.single('file'), (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file' });
+    const url = ['assets', 'docs', req.file.filename].join('/');
+    return res.json({ url });
+  } catch (e) {
+    return res.status(500).json({ error: 'Upload failed' });
+  }
+});
+
 // DB Health
 app.get('/api/health/db', async (req, res) => {
   try {
