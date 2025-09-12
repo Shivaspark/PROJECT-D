@@ -479,7 +479,7 @@ app.post('/api/upload', basicAuth, upload.single('file'), async (req, res) => {
       return res.status(501).json({ error: 'Blob storage not configured' });
     }
     const safeName = path.basename(req.file.originalname).replace(/[^a-z0-9\.-]/gi, '_');
-    const key = `projects/${Date.now()}-${safeName}`;
+    const key = `gallery/${Date.now()}-${safeName}`;
     const result = await put(key, req.file.buffer, {
       access: 'public',
       contentType: req.file.mimetype,
