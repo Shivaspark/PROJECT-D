@@ -12,6 +12,23 @@ require('dotenv').config();
 const app = express();
 app.use(express.json({ limit: '1mb' }));
 
+// CORS for cross-origin frontend
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  next();
+});
+
+// Normalize Vercel rewrite path: /api/(.*) -> /api/index/$1
+// This lets existing '/api/...' routes keep working when the function is '/api/index.js'.
+app.use((req, res, next) => {
+  if (req.url === '/api/index') req.url = '/api';
+  else if (req.url.startsWith('/api/index/')) req.url = req.url.replace(/^\/api\/index\//, '/api/');
+  next();
+});
+
 // Helpers
 function basicAuth(req, res, next) {
   const header = req.headers['authorization'] || '';
@@ -102,8 +119,16 @@ async function dbGetProjects(type) {
   const col = await ensureMongo();
   if (col) {
     const query = allowed.has(type) ? { type } : {};
-    const items = await col.find(query).sort({ title: 1 }).toArray();
-    return items.map(({ id, type, title, description, image }) => ({ id, type, title, description, image }));
+    const items = await col
+      .find(query)
+      .project({ _id: 0, id: 1, type: 1, title: 1, description: 1, image: 1 })
+      .sort({ title: 1 })
+      .toArray();
+    if (items && items.length) return items;
+    const local = readDb();
+    let fallbacks = Array.isArray(local.projects) ? local.projects : [];
+    if (allowed.has(type)) fallbacks = fallbacks.filter(p => p.type === type);
+    return fallbacks;
   } else {
     const db = readDb();
     let items = db.projects || [];
@@ -256,6 +281,38 @@ app.delete('/api/highlights/:id', basicAuth, async (req, res) => {
   }
 });
 
+// Fallback: update highlight via POST
+app.post('/api/highlights/update', basicAuth, async (req, res) => {
+  try {
+    const { id, src, title, order } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const col = await ensureHighlights();
+    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    const exists = await col.findOne({ id });
+    if (!exists) return res.status(404).json({ error: 'Not found' });
+    const update = {};
+    if (typeof src === 'string') update.src = src.trim();
+    if (typeof title === 'string') update.title = title;
+    if (Number.isFinite(order)) update.order = order;
+    await col.updateOne({ id }, { $set: update });
+    const updated = await col.findOne({ id }, { projection: { _id: 0 } });
+    return res.json({ highlight: updated });
+  } catch (e) { return res.status(500).json({ error: 'Failed to update highlight' }); }
+});
+
+// Fallback: delete highlight via POST
+app.post('/api/highlights/delete', basicAuth, async (req, res) => {
+  try {
+    const { id } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const col = await ensureHighlights();
+    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    const { deletedCount } = await col.deleteOne({ id });
+    if (!deletedCount) return res.status(404).json({ error: 'Not found' });
+    return res.json({ deleted: true, id });
+  } catch (e) { return res.status(500).json({ error: 'Failed to delete highlight' }); }
+});
+
 app.get('/api/power-stones', async (req, res) => {
   try {
     const col = await ensurePowerStones();
@@ -316,6 +373,19 @@ app.delete('/api/power-stones/:id', basicAuth, async (req, res) => {
   } catch (e) {
     return res.status(500).json({ error: 'Failed to delete stone' });
   }
+});
+
+// Fallback: delete stone via POST
+app.post('/api/power-stones/delete', basicAuth, async (req, res) => {
+  try {
+    const { id } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const col = await ensurePowerStones();
+    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    const { deletedCount } = await col.deleteOne({ id });
+    if (!deletedCount) return res.status(404).json({ error: 'Not found' });
+    return res.json({ deleted: true, id });
+  } catch (e) { return res.status(500).json({ error: 'Failed to delete stone' }); }
 });
 
 app.get('/api/bulletins', async (req, res) => {
@@ -385,6 +455,19 @@ app.delete('/api/bulletins/:id', basicAuth, async (req, res) => {
   }
 });
 
+// Fallback: delete bulletin via POST
+app.post('/api/bulletins/delete', basicAuth, async (req, res) => {
+  try {
+    const { id } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const col = await ensureBulletins();
+    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    const { deletedCount } = await col.deleteOne({ id });
+    if (!deletedCount) return res.status(404).json({ error: 'Not found' });
+    return res.json({ deleted: true, id });
+  } catch (e) { return res.status(500).json({ error: 'Failed to delete bulletin' }); }
+});
+
 // Upload API -> Vercel Blob (if configured)
 const memStorage = multer.memoryStorage();
 const upload = multer({ storage: memStorage, limits: { fileSize: 5 * 1024 * 1024 } });
@@ -429,6 +512,7 @@ app.get('/api/projects', async (req, res) => {
   try {
     const { type } = req.query;
     const items = await dbGetProjects(type);
+    res.set('Cache-Control', 'no-store');
     res.json({ projects: items });
   } catch (e) {
     res.status(500).json({ error: 'Failed to load projects' });
@@ -464,7 +548,35 @@ app.delete('/api/projects/:id', basicAuth, async (req, res) => {
   try {
     const ok = await dbDeleteProject(id);
     if (!ok) return res.status(404).json({ error: 'Not found' });
-    res.status(204).end();
+    res.set('Cache-Control', 'no-store');
+    res.json({ deleted: true, id });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to delete' });
+  }
+});
+
+// Fallback endpoints for hosts blocking PUT/DELETE
+app.post('/api/projects/update', basicAuth, async (req, res) => {
+  try {
+    const { id, title, description, image, type } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const updated = await dbUpdateProject(id, { title, description, image, type });
+    if (!updated) return res.status(404).json({ error: 'Not found' });
+    res.set('Cache-Control', 'no-store');
+    res.json({ project: updated });
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to update' });
+  }
+});
+
+app.post('/api/projects/delete', basicAuth, async (req, res) => {
+  try {
+    const { id } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'id required' });
+    const ok = await dbDeleteProject(id);
+    if (!ok) return res.status(404).json({ error: 'Not found' });
+    res.set('Cache-Control', 'no-store');
+    res.json({ deleted: true, id });
   } catch (e) {
     res.status(500).json({ error: 'Failed to delete' });
   }

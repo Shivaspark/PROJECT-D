@@ -18,12 +18,38 @@
       }
     }
   </script>
+  <script>
+    (function(){
+      var host = location.hostname;
+      var API_BASE = (host === 'racinfo.in' || host === 'www.racinfo.in') ? 'https://bf9469a66fa84a01a25a648fb5139f34-3f8e6b31-1ae1-4506-a3b7-7cbde4.fly.dev' : '';
+      window.__API_BASE = API_BASE;
+      if (API_BASE) {
+        var _fetch = window.fetch;
+        window.fetch = function(input, init){
+          try {
+            var url = (typeof input === 'string') ? input : (input && input.url);
+            if (url && typeof url === 'string' && url.indexOf('/api/') === 0) {
+              var full = API_BASE + url;
+              if (typeof input === 'string') return _fetch(full, init);
+              try { return _fetch(new Request(full, input), init); } catch { return _fetch(full, init); }
+            }
+          } catch {}
+          return _fetch(input, init);
+        };
+      }
+    })();
+  </script>
 </head>
 <body class="bg-dark-bg text-light-text min-h-screen">
   <header class="bg-dark-secondary border-b border-gray-800">
     <div class="container mx-auto px-6 py-4 flex items-center justify-between">
       <h1 class="text-xl font-heading font-black">Admin • Manage Projects</h1>
-      <a href="/" class="text-accent-blue hover:text-white">← Back to site</a>
+      <div class="flex items-center gap-3">
+        <span id="auth-status" class="text-xs text-gray-400 hidden">Signed out</span>
+        <button id="btn-signin" class="bg-primary-blue text-white px-3 py-1 rounded-full hover:bg-accent-blue transition">Sign in</button>
+        <button id="btn-signout" class="hidden bg-gray-700 text-white px-3 py-1 rounded-full hover:bg-gray-600 transition">Sign out</button>
+        <a href="/" class="text-accent-blue hover:text-white">← Back to site</a>
+      </div>
     </div>
   </header>
 
@@ -201,16 +227,40 @@
       if (p === null) return;
       sessionStorage.setItem('adminAuth', btoa(u + ':' + p));
     }
+    async function isAuthed() {
+      try {
+        const res = await fetch('/api/highlights/admin', { headers: { ...getAuthHeader() } });
+        return res.status !== 401;
+      } catch { return false; }
+    }
+    async function updateAuthUI() {
+      const ok = await isAuthed();
+      const status = document.getElementById('auth-status');
+      const btnIn = document.getElementById('btn-signin');
+      const btnOut = document.getElementById('btn-signout');
+      status.classList.remove('hidden');
+      if (ok) {
+        status.textContent = 'Signed in';
+        btnIn.classList.add('hidden');
+        btnOut.classList.remove('hidden');
+      } else {
+        status.textContent = 'Signed out';
+        btnOut.classList.add('hidden');
+        btnIn.classList.remove('hidden');
+      }
+    }
 
+    function absAsset(u){ if(!u) return u; if(window.__API_BASE && /^assets\//.test(u)) return window.__API_BASE + '/' + u; return u; }
     function projectRowHTML(p) {
       const type = p.type === 'flagship' ? 'existing' : p.type;
       const rowAccent = type === 'existing' ? 'border-gray-500' : 'border-primary-blue';
       const badge = type === 'existing'
         ? '<span class="ml-2 text-[10px] uppercase tracking-wide bg-gray-600/20 text-gray-300 border border-gray-500 px-2 py-0.5 rounded-full">Existing</span>'
         : '<span class="ml-2 text-[10px] uppercase tracking-wide bg-primary-blue/20 text-primary-blue border border-primary-blue px-2 py-0.5 rounded-full">Upcoming</span>';
+      const src = absAsset(p.image);
       return `
         <div class="project-row border-l-4 ${rowAccent} border border-gray-700 rounded p-3 flex flex-col md:flex-row md:items-start gap-3 cursor-pointer hover:bg-dark-bg/40" data-id="${p.id}">
-          <img src="${p.image}" alt="${p.title}" class="w-24 h-16 object-cover rounded border border-gray-600"/>
+          <img src="${src}" alt="${p.title}" class="w-24 h-16 object-cover rounded border border-gray-600"/>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2"><div class="text-accent-blue font-semibold truncate">${p.title}</div>${badge}</div>
             <div class="text-gray-400 text-sm break-words whitespace-normal overflow-hidden">${p.description}</div>
@@ -226,7 +276,8 @@
     function setPreview(url){
       const preview = document.getElementById('pf-preview');
       if (!preview) return;
-      if (url) { preview.src = url; preview.classList.remove('hidden'); }
+      const src = absAsset(url);
+      if (src) { preview.src = src; preview.classList.remove('hidden'); }
       else { preview.src=''; preview.classList.add('hidden'); }
     }
     function prefillForm(item) {
@@ -250,7 +301,7 @@
 
     async function refreshAdminList() {
       const list = document.getElementById('projects-list');
-      const res = await fetch('/api/projects');
+      const res = await fetch('/api/projects', { cache: 'no-store' });
       const { projects } = await res.json();
       const existing = projects.filter(p => (p.type === 'existing' || p.type === 'flagship'));
       const upcoming = projects.filter(p => p.type === 'upcoming');
@@ -265,7 +316,7 @@
         const id = e.currentTarget.getAttribute('data-id');
         if (!confirm('Delete this project?')) return;
         await ensureAuthIfNeeded();
-        const res = await fetch(`/api/projects/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
+        let res = await fetch('/api/projects/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify({ id }) });
         if (!res.ok) {
           const t = await res.text();
           alert('Delete failed: ' + t);
@@ -324,7 +375,8 @@
           imageInput.value = data.url;
           setPreview(data.url);
         } else {
-          alert(data.error || 'Upload failed');
+          const msg = (data && data.error) ? data.error : 'Upload failed';
+          alert(msg);
         }
         fileInput.value = '';
       });
@@ -347,7 +399,8 @@
         await ensureAuthIfNeeded();
         let res;
         if (editId) {
-          res = await fetch(`/api/projects/${editId}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
+          // Use POST fallback to avoid proxies blocking PUT
+          res = await fetch('/api/projects/update', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify({ id: editId, ...payload }) });
         } else {
           res = await fetch('/api/projects', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
         }
@@ -366,9 +419,10 @@
 
     // Highlights admin UI
     function highlightItemRowHTML(h) {
+      const src = absAsset(h.src);
       return `
         <div class="hl-row border-l-4 border-primary-blue border border-gray-700 rounded p-3 flex items-start gap-3 hover:bg-dark-bg/40" data-id="${h.id}">
-          <img src="${h.src}" alt="${h.title || 'Highlight'}" class="hl-thumb w-24 h-16 object-cover rounded border border-gray-600 cursor-zoom-in"/>
+          <img src="${src}" alt="${h.title || 'Highlight'}" class="hl-thumb w-24 h-16 object-cover rounded border border-gray-600 cursor-zoom-in" data-src="${src}" data-title="${h.title || ''}" />
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
               <div class="text-accent-blue font-semibold truncate">${h.title || h.src}</div>
@@ -377,7 +431,7 @@
             <div class="text-gray-500 text-xs mt-1 break-words">${h.src}</div>
           </div>
           <div class="flex gap-2">
-            <button data-src="${h.src}" data-title="${h.title || ''}" class="btn-hl-view bg-primary-blue text-white px-3 py-1 rounded-full">View</button>
+            <button data-src="${src}" data-title="${h.title || ''}" class="btn-hl-view bg-primary-blue text-white px-3 py-1 rounded-full">View</button>
             <button data-id="${h.id}" class="btn-hl-delete bg-gray-700 text-white px-3 py-1 rounded-full">Delete</button>
           </div>
         </div>`
@@ -386,7 +440,7 @@
     function setHighlightPreview(url) {
       const el = document.getElementById('hf-preview');
       if (!el) return;
-      if (url) { el.src = url; el.classList.remove('hidden'); }
+      if (url) { el.src = absAsset(url); el.classList.remove('hidden'); }
       else { el.src = ''; el.classList.add('hidden'); }
     }
 
@@ -428,7 +482,7 @@
       }));
       list.querySelectorAll('.btn-hl-delete').forEach(btn => btn.addEventListener('click', async (e) => {
         e.stopPropagation(); const id = e.currentTarget.getAttribute('data-id'); if (!confirm('Delete this highlight?')) return; await ensureAuthIfNeeded(true);
-        const r = await fetch(`/api/highlights/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
+        const r = await fetch('/api/highlights/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify({ id }) });
         if (!r.ok) { const t = await r.text(); alert('Delete failed: ' + t); return; }
         await refreshHighlightsList();
       }));
@@ -497,10 +551,11 @@
 
     // Power Stones admin UI
     function psCardHTML(s) {
+      const src = absAsset(s.src);
       return `
         <div class="border border-gray-700 rounded p-3 flex items-start gap-3">
           <div class="w-24 aspect-[4/5] overflow-hidden rounded border border-gray-600">
-            <img src="${s.src}" alt="${s.title || ''}" class="w-full h-full object-cover cursor-zoom-in" data-src="${s.src}" data-title="${s.title || ''}"/>
+            <img src="${src}" alt="${s.title || ''}" class="w-full h-full object-cover cursor-zoom-in" data-src="${src}" data-title="${s.title || ''}"/>
           </div>
           <div class="flex-1 min-w-0">
             <div class="flex items-center gap-2">
@@ -510,7 +565,7 @@
             <div class="text-gray-500 text-xs mt-1 break-words">${s.src}</div>
           </div>
           <div class="flex gap-2">
-            <button data-src="${s.src}" data-title="${s.title || ''}" class="btn-ps-view bg-primary-blue text-white px-3 py-1 rounded-full">View</button>
+            <button data-src="${src}" data-title="${s.title || ''}" class="btn-ps-view bg-primary-blue text-white px-3 py-1 rounded-full">View</button>
             <button data-id="${s.id}" class="btn-ps-delete bg-gray-700 text-white px-3 py-1 rounded-full">Delete</button>
           </div>
         </div>`
@@ -538,8 +593,8 @@
         }));
         list.querySelectorAll('.btn-ps-delete').forEach(btn => btn.addEventListener('click', async (e) => {
           e.stopPropagation(); const id = e.currentTarget.getAttribute('data-id'); if (!confirm('Delete this poster?')) return; await ensureAuthIfNeeded(true);
-          const r = await fetch(`/api/power-stones/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
-          if (!r.ok) { alert('Delete failed'); return; }
+          const r = await fetch('/api/power-stones/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify({ id }) });
+          if (!r.ok) { const t = await r.text(); alert('Delete failed: ' + t); return; }
           await refreshPsList();
         }));
       } else if (res.status !== 503) {
@@ -568,6 +623,34 @@
     }
 
     // Bulletins (Documents) admin UI
+
+    // Convert Google Drive view/open links to direct-download URLs (uc?export=download&id=FILEID)
+    function toDirectDriveUrl(url) {
+      if (!url || typeof url !== 'string') return url;
+      url = url.trim();
+      try {
+        const u = new URL(url);
+        const host = u.hostname.toLowerCase();
+        // Only handle common Drive view links
+        if (host.includes('drive.google.com') || host.includes('docs.google.com')) {
+          // /file/d/FILEID/view or /file/d/FILEID
+          const m1 = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+          if (m1 && m1[1]) return 'https://drive.google.com/uc?export=download&id=' + m1[1];
+          // ?id=FILEID or &id=FILEID
+          const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+          if (m2 && m2[1]) return 'https://drive.google.com/uc?export=download&id=' + m2[1];
+          // already an uc link — ensure export=download
+          if (/drive\.google\.com\/uc\?/i.test(url)) {
+            if (/export=download/i.test(url)) return url;
+            return url + (url.indexOf('?') === -1 ? '?export=download' : '&export=download');
+          }
+        }
+        // Already a docs.googleusercontent or direct file host — return as-is
+        return url;
+      } catch (e) {
+        return url;
+      }
+    }
     function bulletinRowHTML(b) {
       return `
         <div class="bulletin-row border-l-4 border-primary-blue border border-gray-700 rounded p-3 flex flex-col md:flex-row md:items-start gap-3 hover:bg-dark-bg/40" data-id="${b.id}">
@@ -619,7 +702,7 @@
       list.innerHTML = bulletins.map(bulletinRowHTML).join('');
       list.querySelectorAll('.btn-bul-delete').forEach(btn => btn.addEventListener('click', async (e) => {
         e.stopPropagation(); const id = e.currentTarget.getAttribute('data-id'); if (!confirm('Delete this document?')) return; await ensureAuthIfNeeded(true);
-        const r = await fetch(`/api/bulletins/${id}`, { method: 'DELETE', headers: { ...getAuthHeader() } });
+        const r = await fetch('/api/bulletins/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify({ id }) });
         if (!r.ok) { const t = await r.text(); alert('Delete failed: ' + t); return; }
         await refreshBulletinsList();
       }));
@@ -646,6 +729,8 @@
           date: document.getElementById('bf-date').value
         };
         if (!payload.pdf) { alert('PDF URL is required'); return; }
+        // Convert common Google Drive share links to direct-download links
+        try { payload.pdf = toDirectDriveUrl(payload.pdf); } catch (e) { /* keep original */ }
         await ensureAuthIfNeeded();
         const res = await fetch('/api/bulletins', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
         if (!res.ok) { const t = await res.text(); alert('Save failed: ' + t); return; }
@@ -664,6 +749,9 @@
       attachBulletinHandlers();
       document.getElementById('hl-viewer-close').addEventListener('click', closeHighlightViewer);
       document.getElementById('hl-viewer').addEventListener('click', (e) => { if (e.target.id === 'hl-viewer') closeHighlightViewer(); });
+      document.getElementById('btn-signin').addEventListener('click', async () => { await ensureAuthIfNeeded(true); await updateAuthUI(); await refreshAdminList(); await refreshHighlightsList(); await refreshPsList(); await refreshBulletinsList(); });
+      document.getElementById('btn-signout').addEventListener('click', async () => { sessionStorage.removeItem('adminAuth'); await updateAuthUI(); });
+      updateAuthUI();
     });
   </script>
 
