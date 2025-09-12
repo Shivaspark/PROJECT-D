@@ -730,4 +730,64 @@ app.get('/api/pdf-proxy', async (req, res) => {
   }
 });
 
+// Migration endpoint: import bundled filesystem images into MongoDB images collection and rewrite references
+app.post('/api/migrate-images', basicAuth, async (req, res) => {
+  try {
+    const imgs = await ensureImages();
+    const pcol = await ensureMongo();
+    const hcol = await ensureHighlights();
+    const pscol = await ensurePowerStones();
+    if (!imgs) return res.status(503).json({ error: 'Images collection not available (no DB)' });
+
+    const dirs = [path.join(ROOT, 'assets', 'images', 'gallery'), path.join(ROOT, 'assets', 'images', 'projects')];
+    const allowed = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg']);
+    const summary = { imported: 0, skipped: 0, updatedProjects: 0, updatedHighlights: 0, updatedPowerStones: 0 };
+
+    for (const dir of dirs) {
+      if (!fs.existsSync(dir)) continue;
+      const files = fs.readdirSync(dir).filter(f => allowed.has(path.extname(f).toLowerCase()));
+      for (const f of files) {
+        const filename = f;
+        const existing = await imgs.findOne({ filename });
+        let id;
+        if (existing) {
+          summary.skipped++;
+          id = existing.id;
+        } else {
+          const abs = path.join(dir, f);
+          const data = fs.readFileSync(abs);
+          const ext = path.extname(f).toLowerCase();
+          const mime = (ext === '.jpg' || ext === '.jpeg') ? 'image/jpeg' : (ext === '.png') ? 'image/png' : (ext === '.gif') ? 'image/gif' : (ext === '.webp') ? 'image/webp' : (ext === '.svg') ? 'image/svg+xml' : 'application/octet-stream';
+          id = `img-${Date.now()}-${Math.floor(Math.random()*9000+1000)}`;
+          await imgs.insertOne({ id, filename, contentType: mime, size: data.length, createdAt: new Date(), data: data });
+          summary.imported++;
+        }
+
+        // Build regex to match references ending with the filename
+        const esc = filename.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const re = new RegExp(esc + '$', 'i');
+        const apiUrl = `/api/image/${id}`;
+
+        if (pcol) {
+          const pRes = await pcol.updateMany({ image: { $regex: re } }, { $set: { image: apiUrl } });
+          summary.updatedProjects += (pRes && pRes.modifiedCount) || 0;
+        }
+        if (hcol) {
+          const hRes = await hcol.updateMany({ src: { $regex: re } }, { $set: { src: apiUrl } });
+          summary.updatedHighlights += (hRes && hRes.modifiedCount) || 0;
+        }
+        if (pscol) {
+          const psRes = await pscol.updateMany({ src: { $regex: re } }, { $set: { src: apiUrl } });
+          summary.updatedPowerStones += (psRes && psRes.modifiedCount) || 0;
+        }
+      }
+    }
+
+    return res.json({ ok: true, summary });
+  } catch (e) {
+    console.error('migrate error', e && e.message);
+    return res.status(500).json({ error: 'Migration failed', message: e.message });
+  }
+});
+
 module.exports = serverless(app);
