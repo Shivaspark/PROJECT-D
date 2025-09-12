@@ -63,6 +63,7 @@ let projectsCol = null;
 let highlightsCol = null;
 let powerStonesCol = null;
 let bulletinsCol = null;
+let imagesCol = null;
 
 async function ensureMongo() {
   if (projectsCol) return projectsCol;
