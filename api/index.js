@@ -115,6 +115,19 @@ async function ensureBulletins() {
   return bulletinsCol;
 }
 
+// Images collection for storing binary uploads inside MongoDB
+async function ensureImages() {
+  if (!mongoDb) { const col = await ensureMongo(); if (!col) return null; }
+  if (!imagesCol) {
+    imagesCol = mongoDb.collection('images');
+    try {
+      await imagesCol.createIndex({ id: 1 }, { unique: true });
+      await imagesCol.createIndex({ filename: 1 });
+    } catch {}
+  }
+  return imagesCol;
+}
+
 async function dbGetProjects(type) {
   const allowed = new Set(['flagship','existing','upcoming']);
   const col = await ensureMongo();
@@ -476,19 +489,58 @@ const upload = multer({ storage: memStorage, limits: { fileSize: 5 * 1024 * 1024
 app.post('/api/upload', basicAuth, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file' });
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
-      return res.status(501).json({ error: 'Blob storage not configured' });
+
+    // Try to save into MongoDB images collection if available
+    const col = await ensureImages();
+    if (col) {
+      const safeName = path.basename(req.file.originalname).replace(/[^a-z0-9\.-]/gi, '_');
+      const id = `img-${Date.now()}-${Math.floor(Math.random()*9000+1000)}`;
+      const doc = {
+        id,
+        filename: safeName,
+        contentType: req.file.mimetype,
+        size: req.file.size,
+        createdAt: new Date(),
+        data: req.file.buffer
+      };
+      await col.insertOne(doc);
+      // Return a URL that serves the image via this function
+      const url = `/api/image/${id}`;
+      return res.json({ url });
     }
-    const safeName = path.basename(req.file.originalname).replace(/[^a-z0-9\.-]/gi, '_');
-    const key = `gallery/${Date.now()}-${safeName}`;
-    const result = await put(key, req.file.buffer, {
-      access: 'public',
-      contentType: req.file.mimetype,
-      token: process.env.BLOB_READ_WRITE_TOKEN
-    });
-    return res.json({ url: result.url });
+
+    // Fallback to Vercel Blob if configured
+    if (process.env.BLOB_READ_WRITE_TOKEN) {
+      const safeName = path.basename(req.file.originalname).replace(/[^a-z0-9\.-]/gi, '_');
+      const key = `gallery/${Date.now()}-${safeName}`;
+      const result = await put(key, req.file.buffer, {
+        access: 'public',
+        contentType: req.file.mimetype,
+        token: process.env.BLOB_READ_WRITE_TOKEN
+      });
+      return res.json({ url: result.url });
+    }
+
+    return res.status(501).json({ error: 'No storage configured' });
   } catch (e) {
+    console.error('upload error', e && e.message);
     return res.status(500).json({ error: 'Upload failed' });
+  }
+});
+
+// Serve images stored in MongoDB
+app.get('/api/image/:id', async (req, res) => {
+  try {
+    const id = req.params.id;
+    const col = await ensureImages();
+    if (!col) return res.status(404).send('Not found');
+    const doc = await col.findOne({ id });
+    if (!doc) return res.status(404).send('Not found');
+    res.setHeader('Content-Type', doc.contentType || 'application/octet-stream');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.send(doc.data.buffer || doc.data);
+  } catch (e) {
+    return res.status(500).send('Failed to serve image');
   }
 });
 
