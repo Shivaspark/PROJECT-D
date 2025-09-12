@@ -22,7 +22,7 @@ app.use((req, res, next) => {
 });
 
 // Upload configuration
-const uploadDir = path.join(__dirname, 'assets', 'images', 'projects');
+const uploadDir = path.join(__dirname, 'assets', 'images', 'gallery');
 fs.mkdirSync(uploadDir, { recursive: true });
 const storage = multer.diskStorage({
   destination: function (req, file, cb) { cb(null, uploadDir); },
@@ -526,7 +526,7 @@ app.post('/api/bulletins/delete', basicAuth, async (req, res) => {
 app.post('/api/upload', basicAuth, upload.single('file'), (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file' });
-    const url = ['assets', 'images', 'projects', req.file.filename].join('/');
+    const url = ['assets', 'images', 'gallery', req.file.filename].join('/');
     return res.json({ url });
   } catch (e) {
     return res.status(500).json({ error: 'Upload failed' });
