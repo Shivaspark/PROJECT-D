@@ -21,9 +21,9 @@
   <script>
     (function(){
       var host = location.hostname;
-      var API_ORIGIN = 'https://bf9469a66fa84a01a25a648fb5139f34-3f8e6b31-1ae1-4506-a3b7-7cbde4.fly.dev';
-      var isLocal = (host === 'localhost' || host === '127.0.0.1');
-      var API_BASE = isLocal ? '' : API_ORIGIN;
+      var EXTERNAL_API_ORIGIN = 'https://bf9469a66fa84a01a25a648fb5139f34-3f8e6b31-1ae1-4506-a3b7-7cbde4.fly.dev';
+      // Use external API only when running on the official domain
+      var API_BASE = (host === 'racinfo.in' || host === 'www.racinfo.in') ? EXTERNAL_API_ORIGIN : '';
       window.__API_BASE = API_BASE;
       if (API_BASE) {
         var _fetch = window.fetch;
