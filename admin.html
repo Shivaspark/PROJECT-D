@@ -105,7 +105,11 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div class="md:col-span-2">
             <label class="block text-gray-300 text-sm mb-1">Image URL</label>
-            <input id="hf-src" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="assets/images/gallery/g-1.svg or https://..." />
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input id="hf-src" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="assets/images/gallery/g-1.svg or https://..." />
+              <input id="hf-file" type="file" accept="image/*" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" />
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Provide a URL or upload a file. Upload will auto-fill the URL.</p>
             <img id="hf-preview" src="" alt="Preview" class="mt-2 h-24 w-40 object-cover rounded border border-gray-700 hidden" />
           </div>
           <div>
@@ -150,7 +154,12 @@
           </div>
           <div class="md:col-span-2">
             <label class="block text-gray-300 text-sm mb-1">Image URL</label>
-            <input id="ps-src" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="https://..." />
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input id="ps-src" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="https://..." />
+              <input id="ps-file" type="file" accept="image/*" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" />
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Provide a URL or upload a file. Upload will auto-fill the URL.</p>
+            <img id="ps-preview" src="" alt="Preview" class="mt-2 h-24 w-40 object-cover rounded border border-gray-700 hidden" />
           </div>
           <div class="md:col-span-3">
             <label class="block text-gray-300 text-sm mb-1">Title (optional)</label>
@@ -443,6 +452,12 @@
       if (url) { el.src = absAsset(url); el.classList.remove('hidden'); }
       else { el.src = ''; el.classList.add('hidden'); }
     }
+    function setPsPreview(url) {
+      const el = document.getElementById('ps-preview');
+      if (!el) return;
+      if (url) { el.src = absAsset(url); el.classList.remove('hidden'); }
+      else { el.src = ''; el.classList.add('hidden'); }
+    }
 
     async function refreshHighlightsList() {
       const list = document.getElementById('highlights-list');
@@ -495,10 +510,32 @@
       const form = document.getElementById('highlight-form');
       const resetBtn = document.getElementById('hf-reset');
       const srcInput = document.getElementById('hf-src');
+      const fileInput = document.getElementById('hf-file');
       const titleInput = document.getElementById('hf-title');
       const orderInput = document.getElementById('hf-order');
 
       srcInput.addEventListener('input', () => setHighlightPreview(srcInput.value.trim()));
+
+      if (fileInput) {
+        fileInput.addEventListener('change', async () => {
+          const f = fileInput.files && fileInput.files[0];
+          if (!f) return;
+          const fd = new FormData();
+          fd.append('file', f);
+          await ensureAuthIfNeeded();
+          const resp = await fetch('/api/upload', { method: 'POST', headers: { ...getAuthHeader() }, body: fd });
+          let data;
+          try { data = await resp.json(); } catch { data = null; }
+          if (resp.ok && data && data.url) {
+            srcInput.value = data.url;
+            setHighlightPreview(data.url);
+          } else {
+            const msg = (data && data.error) ? data.error : 'Upload failed';
+            alert(msg);
+          }
+          fileInput.value = '';
+        });
+      }
 
       resetBtn.addEventListener('click', () => {
         form.reset();
@@ -604,11 +641,37 @@
     function attachPsHandlers() {
       const form = document.getElementById('ps-form');
       const resetBtn = document.getElementById('ps-reset');
+      const srcInput = document.getElementById('ps-src');
+      const fileInput = document.getElementById('ps-file');
+
+      srcInput.addEventListener('input', () => setPsPreview(srcInput.value.trim()));
+
+      if (fileInput) {
+        fileInput.addEventListener('change', async () => {
+          const f = fileInput.files && fileInput.files[0];
+          if (!f) return;
+          const fd = new FormData();
+          fd.append('file', f);
+          await ensureAuthIfNeeded();
+          const resp = await fetch('/api/upload', { method: 'POST', headers: { ...getAuthHeader() }, body: fd });
+          let data;
+          try { data = await resp.json(); } catch { data = null; }
+          if (resp.ok && data && data.url) {
+            srcInput.value = data.url;
+            setPsPreview(data.url);
+          } else {
+            const msg = (data && data.error) ? data.error : 'Upload failed';
+            alert(msg);
+          }
+          fileInput.value = '';
+        });
+      }
+
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const payload = {
           slot: Number(document.getElementById('ps-slot').value),
-          src: document.getElementById('ps-src').value.trim(),
+          src: srcInput.value.trim(),
           title: document.getElementById('ps-title').value.trim()
         };
         if (!payload.src || !Number.isInteger(payload.slot)) { alert('Slot and Image URL required'); return; }
@@ -616,9 +679,10 @@
         const res = await fetch('/api/power-stones', { method: 'POST', headers: { 'Content-Type': 'application/json', ...getAuthHeader() }, body: JSON.stringify(payload) });
         if (!res.ok) { const t = await res.text(); alert('Save failed: ' + t); return; }
         form.reset();
+        setPsPreview('');
         await refreshPsList();
       });
-      resetBtn.addEventListener('click', () => { form.reset(); });
+      resetBtn.addEventListener('click', () => { form.reset(); setPsPreview(''); });
       refreshPsList();
     }
 
