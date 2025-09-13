@@ -106,6 +106,8 @@
           <div class="md:col-span-2">
             <label class="block text-gray-300 text-sm mb-1">Image URL</label>
             <input id="hf-src" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="assets/images/gallery/g-1.svg or https://..." />
+            <input id="hf-file" type="file" accept="image/*" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200 mt-2" />
+            <p class="text-xs text-gray-500 mt-1">Provide a URL or upload a file. Upload will auto-fill the URL.</p>
             <img id="hf-preview" src="" alt="Preview" class="mt-2 h-24 w-40 object-cover rounded border border-gray-700 hidden" />
           </div>
           <div>
@@ -151,6 +153,8 @@
           <div class="md:col-span-2">
             <label class="block text-gray-300 text-sm mb-1">Image URL</label>
             <input id="ps-src" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200" placeholder="https://..." />
+            <input id="ps-file" type="file" accept="image/*" class="w-full bg-dark-bg border border-gray-600 rounded px-3 py-2 text-gray-200 mt-2" />
+            <p class="text-xs text-gray-500 mt-1">Provide a URL or upload a file. Upload will auto-fill the URL.</p>
           </div>
           <div class="md:col-span-3">
             <label class="block text-gray-300 text-sm mb-1">Title (optional)</label>
@@ -500,6 +504,27 @@
 
       srcInput.addEventListener('input', () => setHighlightPreview(srcInput.value.trim()));
 
+      const fileInput = document.getElementById('hf-file');
+      if (fileInput) {
+        fileInput.addEventListener('change', async () => {
+          const f = fileInput.files && fileInput.files[0];
+          if (!f) return;
+          const fd = new FormData();
+          fd.append('file', f);
+          await ensureAuthIfNeeded();
+          const resp = await fetch('/api/upload', { method: 'POST', headers: { ...getAuthHeader() }, body: fd });
+          const data = await resp.json();
+          if (resp.ok && data.url) {
+            srcInput.value = data.url;
+            setHighlightPreview(data.url);
+          } else {
+            const msg = (data && data.error) ? data.error : 'Upload failed';
+            alert(msg);
+          }
+          fileInput.value = '';
+        });
+      }
+
       resetBtn.addEventListener('click', () => {
         form.reset();
         form.removeAttribute('data-edit-id');
@@ -604,6 +629,27 @@
     function attachPsHandlers() {
       const form = document.getElementById('ps-form');
       const resetBtn = document.getElementById('ps-reset');
+
+      const psFile = document.getElementById('ps-file');
+      if (psFile) {
+        psFile.addEventListener('change', async () => {
+          const f = psFile.files && psFile.files[0];
+          if (!f) return;
+          const fd = new FormData();
+          fd.append('file', f);
+          await ensureAuthIfNeeded();
+          const resp = await fetch('/api/upload', { method: 'POST', headers: { ...getAuthHeader() }, body: fd });
+          const data = await resp.json();
+          if (resp.ok && data.url) {
+            const srcInput = document.getElementById('ps-src');
+            srcInput.value = data.url;
+          } else {
+            const msg = (data && data.error) ? data.error : 'Upload failed';
+            alert(msg);
+          }
+          psFile.value = '';
+        });
+      }
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const payload = {
@@ -639,7 +685,7 @@
           // ?id=FILEID or &id=FILEID
           const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
           if (m2 && m2[1]) return 'https://drive.google.com/uc?export=download&id=' + m2[1];
-          // already an uc link — ensure export=download
+          // already an uc link �� ensure export=download
           if (/drive\.google\.com\/uc\?/i.test(url)) {
             if (/export=download/i.test(url)) return url;
             return url + (url.indexOf('?') === -1 ? '?export=download' : '&export=download');
