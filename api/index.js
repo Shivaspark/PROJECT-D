@@ -468,24 +468,41 @@ app.post('/api/bulletins/delete', basicAuth, async (req, res) => {
   } catch (e) { return res.status(500).json({ error: 'Failed to delete bulletin' }); }
 });
 
-// Upload API -> Vercel Blob (if configured)
+// Assets collection helper
+let assetsCol = null;
+async function ensureAssets() {
+  if (!mongoDb) { const col = await ensureMongo(); if (!col) return null; }
+  if (!assetsCol) {
+    assetsCol = mongoDb.collection('assets');
+    try {
+      await assetsCol.createIndex({ id: 1 }, { unique: true });
+      await assetsCol.createIndex({ createdAt: -1 });
+    } catch {}
+  }
+  return assetsCol;
+}
+
+// Upload API -> store file in MongoDB and return serving URL
 const memStorage = multer.memoryStorage();
 const upload = multer({ storage: memStorage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 app.post('/api/upload', basicAuth, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: 'No file' });
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
-      return res.status(501).json({ error: 'Blob storage not configured' });
-    }
-    const safeName = path.basename(req.file.originalname).replace(/[^a-z0-9\.-]/gi, '_');
-    const key = `projects/${Date.now()}-${safeName}`;
-    const result = await put(key, req.file.buffer, {
-      access: 'public',
-      contentType: req.file.mimetype,
-      token: process.env.BLOB_READ_WRITE_TOKEN
-    });
-    return res.json({ url: result.url });
+    const col = await ensureAssets();
+    if (!col) return res.status(503).json({ error: 'Database not configured' });
+    const safeName = path.basename(req.file.originalname || 'file').replace(/[^a-z0-9\.-]/gi, '_');
+    const id = `asset-${Date.now()}-${Math.random().toString(36).slice(2,8)}`;
+    const doc = {
+      id,
+      filename: safeName,
+      contentType: req.file.mimetype || 'application/octet-stream',
+      size: req.file.size || (req.file.buffer ? req.file.buffer.length : 0),
+      data: req.file.buffer,
+      createdAt: new Date().toISOString()
+    };
+    await col.insertOne(doc);
+    return res.json({ url: `/api/assets/${id}` });
   } catch (e) {
     return res.status(500).json({ error: 'Upload failed' });
   }
@@ -614,6 +631,23 @@ app.get('/api/projects/import', basicAuth, async (req, res) => {
     return res.json(result);
   } catch (e) {
     return res.status(500).json({ error: 'Failed to import', message: e.message });
+  }
+});
+
+// Serve stored asset by id
+app.get('/api/assets/:id', async (req, res) => {
+  try {
+    const col = await ensureAssets();
+    if (!col) return res.status(503).send('Database not configured');
+    const { id } = req.params;
+    const doc = await col.findOne({ id });
+    if (!doc || !doc.data) return res.status(404).send('Not found');
+    res.setHeader('Content-Type', doc.contentType || 'application/octet-stream');
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    if (doc.filename) res.setHeader('Content-Disposition', `inline; filename="${doc.filename}"`);
+    return res.end(doc.data.buffer || doc.data);
+  } catch (e) {
+    return res.status(500).send('Error');
   }
 });
 
